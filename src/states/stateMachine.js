@@ -30,6 +30,17 @@ class StateMachine {
             case states.BALANCE:
                 return await this.fetchBalance();
 
+            case states.HELP:
+                if (intent === 'BALANCE') {
+                    this.state = states.BALANCE;
+                    return await this.fetchBalance();
+                } else if (intent === 'BILL_PAYMENT') {
+                    this.state = states.BILL_PAYMENT;
+                    return "Navigating to Bill Payment...";
+                }
+                // Handle other button responses...
+                break;
+
             // Handle other states similarly...
 
             default:
@@ -40,11 +51,13 @@ class StateMachine {
     async sendHelpOptions() {
         const helpMessage = {
             messaging_product: "whatsapp",
-            to: "user_id", // Replace with the actual user ID dynamically
+            recipient_type: "individual", // Specify recipient type
+            to: "106915092405923", // Replace with the actual user ID dynamically
+            type: "interactive",
             interactive: {
                 type: "button",
                 header: {
-                    type: "text",
+                    type: "text", // Changed from "image" to "text" for the header
                     text: "How can I assist you today?"
                 },
                 body: {
