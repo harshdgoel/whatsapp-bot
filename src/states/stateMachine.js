@@ -145,16 +145,7 @@ class StateMachine {
                     buttons: [
                         { type: "reply", reply: { id: "BALANCE", title: "Balance" } },
                         { type: "reply", reply: { id: "BILL_PAYMENT", title: "Pay Bill" } },
-                        { type: "reply", reply: { id: "RECENT_TRANSACTIONS", title: "Recent Transactions" } },
-                        { type: "reply", reply: { id: "MONEY_TRANSFER", title: "Money Transfer" } },
-                        { type: "reply", reply: { id: "SPENDS", title: "Spends" } },
-                        { type: "reply", reply: { id: "UPCOMING_PAYMENTS", title: "Upcoming Payments" } },
-                        { type: "reply", reply: { id: "CREDIT_DUES", title: "Credit Dues" } },
-                        { type: "reply", reply: { id: "OUTSTANDING_LOAN", title: "Outstanding Loan" } },
-                        { type: "reply", reply: { id: "NEXT_LOAN", title: "Next Loan" } },
-                        { type: "reply", reply: { id: "LOCATE_ATM", title: "Locate ATM" } },
-                        { type: "reply", reply: { id: "LOCATE_BRANCH", title: "Locate Branch" } },
-                        { type: "reply", reply: { id: "FINANCE_INQUIRY", title: "Finance Inquiry" } }
+                        { type: "reply", reply: { id: "RECENT_TRANSACTIONS", title: "Recent Transactions" } }
                     ]
                 }
             }
