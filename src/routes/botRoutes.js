@@ -2,7 +2,7 @@ const express = require("express");
 const axios = require("axios");
 const natural = require("natural");
 const { WordTokenizer } = natural;
-const stateMachine = require("./stateMachine");
+const stateMachine = require('../states/stateMachine'); // Correct path to stateMachine.js
 const router = express.Router();
 
 const intents = {
