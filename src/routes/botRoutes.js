@@ -2,10 +2,11 @@ const express = require("express");
 const axios = require("axios");
 const natural = require("natural");
 const { WordTokenizer } = natural;
-const stateMachine = require('../states/stateMachine'); // Ensure your stateMachine can handle the new states
+const StateMachine = require('../states/stateMachine'); // Correctly instantiate StateMachine
 const config = require('../config/config');
 const router = express.Router();
-const stateMachine = new StateMachine();
+const stateMachine = new StateMachine(); // Ensure the state machine instance is created
+
 // Updated intents with additional states
 const intents = {
     INITIAL: ["start", "begin", "hello", "hi", "greetings"],
@@ -29,51 +30,32 @@ const tokenizer = new WordTokenizer();
 const identifyIntent = (message) => {
     const tokens = tokenizer.tokenize(message.toLowerCase());
     for (const [intent, keywords] of Object.entries(intents)) {
-        if (keywords.some(keyword => tokens.includes(keyword))) {
+        if (keywords.some((keyword) => tokens.includes(keyword))) {
             return intent;
         }
     }
-    return null; // No matching intent
-};
-
-const sendMessageToWhatsApp = async (to, message) => {
-    try {
-        await axios.post(`https://graph.facebook.com/v17.0/${config.phoneNumberId}/messages?access_token=${config.whatsappToken}`, {
-            messaging_product: "whatsapp",
-            to: to,
-            text: { body: message }
-        });
-    } catch (error) {
-        console.error("Error sending message:", error.response ? error.response.data : error.message);
-    }
+    return null; // Return null if no intent is found
 };
 
 router.post("/webhook", async (req, res) => {
-    const bodyParam = req.body;
-    console.log("Received webhook body:", JSON.stringify(bodyParam));
+    const body = req.body;
 
-    if (!bodyParam.object) {
-        return res.sendStatus(404);
+    // Validate incoming webhook requests
+    if (body.object) {
+        // Handle the webhook events
+        if (body.entry && body.entry[0].changes && body.entry[0].changes[0].value.messages) {
+            const messageData = body.entry[0].changes[0].value.messages[0];
+            const from = messageData.from;
+            const messageBody = messageData.text.body;
+
+            // Identify the intent
+            const intent = identifyIntent(messageBody);
+            await stateMachine.handleMessage(from, messageBody, intent);
+        }
+        res.status(200).send("EVENT_RECEIVED");
+    } else {
+        res.sendStatus(404);
     }
-
-    const changes = bodyParam.entry[0].changes[0].value;
-
-    if (changes.messages && changes.messages.length > 0) {
-        const message = changes.messages[0];
-        const from = message.from;
-        const messageBody = message.text.body;
-
-        // Identify user intent and handle state transitions
-        const intent = identifyIntent(messageBody);
-        const responseMessage = await stateMachine.handleMessage(from, messageBody, intent);
-
-        // Send the response message
-        await sendMessageToWhatsApp(from, responseMessage);
-
-        return res.sendStatus(200);
-    }
-
-    return res.sendStatus(404);
 });
 
 module.exports = router;
