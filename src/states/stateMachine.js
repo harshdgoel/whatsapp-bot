@@ -160,8 +160,14 @@ class StateMachine {
             }
         };
 
-        // Send help message to the user
-        await this.sendResponse(helpMessage.to, helpMessage);
+      const url = `https://graph.facebook.com/v17.0/${config.phoneNumberId}/messages?access_token=${config.whatsappToken}`;
+    
+    try {
+        const result = await axios.post(url, helpMessage); // Send helpMessage directly
+        console.log("Response sent successfully:", result.data);
+    } catch (error) {
+        console.error("Error sending response:", error.response ? error.response.data : error.message);
+    }
     }
 
     async sendResponse(to, message) {
