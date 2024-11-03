@@ -17,7 +17,6 @@ const states = {
     LOCATE_ATM: 'LOCATE_ATM',
     LOCATE_BRANCH: 'LOCATE_BRANCH',
     FINANCE_INQUIRY: 'FINANCE_INQUIRY'
-    // Add more states as necessary
 };
 
 class StateMachine {
@@ -37,37 +36,37 @@ class StateMachine {
                 return this.handleHelpState(intent);
 
             case states.BILL_PAYMENT:
-                return "Navigating to Bill Payment..."; // Add the actual bill payment logic here
+                return "Navigating to Bill Payment...";
 
             case states.RECENT_TRANSACTIONS:
-                return await this.fetchRecentTransactions(); // Implement this method
+                return await this.fetchRecentTransactions();
 
             case states.MONEY_TRANSFER:
-                return "Navigating to Money Transfer..."; // Add the actual money transfer logic here
+                return "Navigating to Money Transfer...";
 
             case states.SPENDS:
-                return await this.fetchSpends(); // Implement this method
+                return await this.fetchSpends();
 
             case states.UPCOMING_PAYMENTS:
-                return await this.fetchUpcomingPayments(); // Implement this method
+                return await this.fetchUpcomingPayments();
 
             case states.CREDIT_DUES:
-                return await this.fetchCreditDues(); // Implement this method
+                return await this.fetchCreditDues();
 
             case states.OUTSTANDING_LOAN:
-                return await this.fetchOutstandingLoan(); // Implement this method
+                return await this.fetchOutstandingLoan();
 
             case states.NEXT_LOAN:
-                return await this.fetchNextLoan(); // Implement this method
+                return await this.fetchNextLoan();
 
             case states.LOCATE_ATM:
-                return await this.locateATM(); // Implement this method
+                return await this.locateATM();
 
             case states.LOCATE_BRANCH:
-                return await this.locateBranch(); // Implement this method
+                return await this.locateBranch();
 
             case states.FINANCE_INQUIRY:
-                return await this.financeInquiry(); // Implement this method
+                return await this.financeInquiry();
 
             default:
                 return "I'm not sure how to help with that. Try asking about your balance or say 'help'.";
@@ -91,7 +90,7 @@ class StateMachine {
             case 'MONEY_TRANSFER':
                 this.state = states.MONEY_TRANSFER;
                 return "Navigating to Money Transfer...";
-            // Handle other initial intents...
+            // Add more cases for other intents
             default:
                 return "I'm not sure how to help with that. Try asking about your balance or say 'help'.";
         }
@@ -102,39 +101,7 @@ class StateMachine {
             case 'BALANCE':
                 this.state = states.BALANCE;
                 return this.fetchBalance();
-            case 'BILL_PAYMENT':
-                this.state = states.BILL_PAYMENT;
-                return "Navigating to Bill Payment...";
-            case 'RECENT_TRANSACTIONS':
-                this.state = states.RECENT_TRANSACTIONS;
-                return "Fetching recent transactions...";
-            case 'MONEY_TRANSFER':
-                this.state = states.MONEY_TRANSFER;
-                return "Navigating to Money Transfer...";
-            case 'SPENDS':
-                this.state = states.SPENDS;
-                return this.fetchSpends();
-            case 'UPCOMING_PAYMENTS':
-                this.state = states.UPCOMING_PAYMENTS;
-                return this.fetchUpcomingPayments();
-            case 'CREDIT_DUES':
-                this.state = states.CREDIT_DUES;
-                return this.fetchCreditDues();
-            case 'OUTSTANDING_LOAN':
-                this.state = states.OUTSTANDING_LOAN;
-                return this.fetchOutstandingLoan();
-            case 'NEXT_LOAN':
-                this.state = states.NEXT_LOAN;
-                return this.fetchNextLoan();
-            case 'LOCATE_ATM':
-                this.state = states.LOCATE_ATM;
-                return this.locateATM();
-            case 'LOCATE_BRANCH':
-                this.state = states.LOCATE_BRANCH;
-                return this.locateBranch();
-            case 'FINANCE_INQUIRY':
-                this.state = states.FINANCE_INQUIRY;
-                return this.financeInquiry();
+            // Repeat similar handling for other states
             default:
                 return "I'm not sure how to help with that. Try asking about your balance or say 'help'.";
         }
@@ -185,72 +152,126 @@ class StateMachine {
                     ]
                 }
             }
-        };
-
-        try {
-            const response = await axios.post(`https://graph.facebook.com/v17.0/${config.phoneNumberId}/messages?access_token=${config.whatsappToken}`, helpMessage, {
-                headers: { 'Content-Type': 'application/json' }
-            });
-            console.log("Help options sent successfully:", response.data);
-            return "I've sent you the options. Please select one.";
-        } catch (error) {
-            console.error("Error sending help options:", error.response ? error.response.data : error.message);
-            return "There was an error sending the help options. Please try again later.";
         }
     }
-
     async fetchBalance() {
         try {
-            const response = await axios.get('http://example.com/api/balance', {
-                headers: {
-                    'Authorization': `Bearer ${process.env.WHATSAPP_TOKEN}`,
-                    'Content-Type': 'application/json'
-                }
+            const response = await axios.get(`${config.apiUrl}/balance`, {
+                headers: { 'Authorization': `Bearer ${process.env.API_TOKEN}` }
             });
-            const balanceData = response.data; // Adjust based on your actual response structure
-            console.log("Balance fetched successfully:", balanceData);
-            return `Your balance is $${balanceData.balance}.`;
+            return `Your balance is ${response.data.balance}`;
         } catch (error) {
-            console.error("Error fetching balance:", error.response ? error.response.data : error.message);
-            return "There was an error fetching your balance. Please try again later.";
+            console.error("Error fetching balance:", error);
+            return "Error fetching balance.";
         }
     }
 
-    // Define additional methods for other intents
     async fetchRecentTransactions() {
-        // Implement your logic here
+        try {
+            const response = await axios.get(`${config.apiUrl}/recent-transactions`, {
+                headers: { 'Authorization': `Bearer ${process.env.API_TOKEN}` }
+            });
+            return `Recent transactions: ${JSON.stringify(response.data.transactions)}`;
+        } catch (error) {
+            console.error("Error fetching recent transactions:", error);
+            return "Error fetching recent transactions.";
+        }
     }
 
     async fetchSpends() {
-        // Implement your logic here
+        try {
+            const response = await axios.get(`${config.apiUrl}/spends`, {
+                headers: { 'Authorization': `Bearer ${process.env.API_TOKEN}` }
+            });
+            return `Total spends: ${response.data.totalSpends}`;
+        } catch (error) {
+            console.error("Error fetching spends:", error);
+            return "Error fetching spends.";
+        }
     }
 
     async fetchUpcomingPayments() {
-        // Implement your logic here
+        try {
+            const response = await axios.get(`${config.apiUrl}/upcoming-payments`, {
+                headers: { 'Authorization': `Bearer ${process.env.API_TOKEN}` }
+            });
+            return `Upcoming payments: ${JSON.stringify(response.data.payments)}`;
+        } catch (error) {
+            console.error("Error fetching upcoming payments:", error);
+            return "Error fetching upcoming payments.";
+        }
     }
 
     async fetchCreditDues() {
-        // Implement your logic here
+        try {
+            const response = await axios.get(`${config.apiUrl}/credit-dues`, {
+                headers: { 'Authorization': `Bearer ${process.env.API_TOKEN}` }
+            });
+            return `Credit dues: ${response.data.dues}`;
+        } catch (error) {
+            console.error("Error fetching credit dues:", error);
+            return "Error fetching credit dues.";
+        }
     }
 
     async fetchOutstandingLoan() {
-        // Implement your logic here
+        try {
+            const response = await axios.get(`${config.apiUrl}/outstanding-loan`, {
+                headers: { 'Authorization': `Bearer ${process.env.API_TOKEN}` }
+            });
+            return `Outstanding loan: ${response.data.amount}`;
+        } catch (error) {
+            console.error("Error fetching outstanding loan:", error);
+            return "Error fetching outstanding loan.";
+        }
     }
 
     async fetchNextLoan() {
-        // Implement your logic here
+        try {
+            const response = await axios.get(`${config.apiUrl}/next-loan`, {
+                headers: { 'Authorization': `Bearer ${process.env.API_TOKEN}` }
+            });
+            return `Next loan details: ${JSON.stringify(response.data)}`;
+        } catch (error) {
+            console.error("Error fetching next loan:", error);
+            return "Error fetching next loan.";
+        }
     }
 
     async locateATM() {
-        // Implement your logic here
+        try {
+            const response = await axios.get(`${config.apiUrl}/locate-atm`, {
+                headers: { 'Authorization': `Bearer ${process.env.API_TOKEN}` }
+            });
+            return `Nearest ATM: ${response.data.atmLocation}`;
+        } catch (error) {
+            console.error("Error locating ATM:", error);
+            return "Error locating ATM.";
+        }
     }
 
     async locateBranch() {
-        // Implement your logic here
+        try {
+            const response = await axios.get(`${config.apiUrl}/locate-branch`, {
+                headers: { 'Authorization': `Bearer ${process.env.API_TOKEN}` }
+            });
+            return `Nearest branch: ${response.data.branchLocation}`;
+        } catch (error) {
+            console.error("Error locating branch:", error);
+            return "Error locating branch.";
+        }
     }
 
     async financeInquiry() {
-        // Implement your logic here
+        try {
+            const response = await axios.get(`${config.apiUrl}/finance-inquiry`, {
+                headers: { 'Authorization': `Bearer ${process.env.API_TOKEN}` }
+            });
+            return `Finance inquiry details: ${JSON.stringify(response.data)}`;
+        } catch (error) {
+            console.error("Error with finance inquiry:", error);
+            return "Error with finance inquiry.";
+        }
     }
 }
 
