@@ -61,10 +61,20 @@ class StateMachine {
                     text: "How can I assist you today?"
                 },
                 body: {
-                    text: "Here are some options I can help you with:"
-                },
-                footer: {
-                    text: "Please select one of the options below."
+                    text: "Here's what I can help you with:\n" +
+                           "- View account balances\n" +
+                           "- Bill Payment\n" +
+                           "- Money Transfer\n" +
+                           "- Find a bank branch or ATM\n" +
+                           "- View recent transactions\n" +
+                           "- Inquire your spends\n" +
+                           "- Know your upcoming payments\n" +
+                           "- Inquire about dues on credit card\n" +
+                           "- Inquire about credit card limit\n" +
+                           "- Inquire your outstanding balance on loan account\n" +
+                           "- Inquire about next installment date and amount\n" +
+                           "- Get more information about banking products and services offered by Futura Bank\n" +
+                           "- New Account Opening info"
                 },
                 action: {
                     buttons: [
@@ -79,7 +89,14 @@ class StateMachine {
                             type: "reply",
                             reply: {
                                 id: "BILL_PAYMENT",
-                                title: "Bill Payment"
+                                title: "Pay Bill"
+                            }
+                        },
+                        {
+                            type: "reply",
+                            reply: {
+                                id: "RECENT_TRANSACTIONS",
+                                title: "Recent Transactions"
                             }
                         },
                         {
@@ -87,6 +104,62 @@ class StateMachine {
                             reply: {
                                 id: "MONEY_TRANSFER",
                                 title: "Money Transfer"
+                            }
+                        },
+                        {
+                            type: "reply",
+                            reply: {
+                                id: "SPENDS",
+                                title: "Spends"
+                            }
+                        },
+                        {
+                            type: "reply",
+                            reply: {
+                                id: "UPCOMING_PAYMENTS",
+                                title: "Upcoming Payments"
+                            }
+                        },
+                        {
+                            type: "reply",
+                            reply: {
+                                id: "CREDIT_DUES",
+                                title: "Credit Card Dues"
+                            }
+                        },
+                        {
+                            type: "reply",
+                            reply: {
+                                id: "OUTSTANDING_LOAN",
+                                title: "Outstanding Loan"
+                            }
+                        }, 
+                        {
+                            type: "reply",
+                            reply: {
+                                id: "NEXT_LOAN",
+                                title: "Next Loan"
+                            }
+                        },
+                        {
+                            type: "reply",
+                            reply: {
+                                id: "LOCATE_ATM",
+                                title: "Locate ATM"
+                            }
+                        },
+                         {
+                            type: "reply",
+                            reply: {
+                                id: "LOCATE_BRANCH",
+                                title: "Locate Branch"
+                            }
+                        },
+                           {
+                            type: "reply",
+                            reply: {
+                                id: "FINANCE_INQUIRY",
+                                title: "Finance Inquiry"
                             }
                         }
                     ]
