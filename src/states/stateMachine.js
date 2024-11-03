@@ -3,9 +3,9 @@ const stateMachine = {
     states: {
         INITIAL: {
             prompt: "Welcome! Type 'help me' for assistance.",
-            onMessage: (message) => {
+            onMessage: function (message) { // Use a regular function
                 if (message.toLowerCase() === "help me") {
-                    this.currentState = this.states.HELP;
+                    stateMachine.currentState = stateMachine.states.HELP; // Use stateMachine to reference the main object
                     return "How can I assist you?";
                 }
                 return "I'm not sure how to help with that. Type 'help me' for assistance.";
@@ -13,9 +13,9 @@ const stateMachine = {
         },
         HELP: {
             prompt: "You are in the help state.",
-            onMessage: (message) => {
+            onMessage: function (message) { // Use a regular function
                 if (message.toLowerCase() === "exit") {
-                    this.currentState = this.states.INITIAL;
+                    stateMachine.currentState = stateMachine.states.INITIAL; // Use stateMachine to reference the main object
                     return "Returning to the main menu. Type 'help me' for assistance.";
                 }
                 return "Please specify what you need help with.";
@@ -23,8 +23,8 @@ const stateMachine = {
         }
     },
     handleMessage: function (from, message) {
-        const text = message.text.body;
-        return this.states[this.currentState.name].onMessage(text);
+        const text = message.text.body.toLowerCase(); // Ensure message text is lowercase
+        return this.currentState.onMessage(text); // Access currentState and call onMessage
     }
 };
 
