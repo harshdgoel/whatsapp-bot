@@ -91,6 +91,9 @@ class StateMachine {
 
     async handleHelpState(intent) {
         switch (intent) {
+            case 'HELP':
+                this.state = states.HELP;
+                return await this.sendHelpOptions();
             case 'BALANCE':
                 this.state = states.BALANCE;
                 return await this.fetchBalance();
