@@ -7,6 +7,16 @@ const states = {
     HELP: 'HELP',
     BALANCE: 'BALANCE',
     BILL_PAYMENT: 'BILL_PAYMENT',
+    RECENT_TRANSACTIONS: 'RECENT_TRANSACTIONS',
+    MONEY_TRANSFER: 'MONEY_TRANSFER',
+    SPENDS: 'SPENDS',
+    UPCOMING_PAYMENTS: 'UPCOMING_PAYMENTS',
+    CREDIT_DUES: 'CREDIT_DUES',
+    OUTSTANDING_LOAN: 'OUTSTANDING_LOAN',
+    NEXT_LOAN: 'NEXT_LOAN',
+    LOCATE_ATM: 'LOCATE_ATM',
+    LOCATE_BRANCH: 'LOCATE_BRANCH',
+    FINANCE_INQUIRY: 'FINANCE_INQUIRY',
     // Add more states as necessary
 };
 
@@ -18,31 +28,113 @@ class StateMachine {
     async transition(intent) {
         switch (this.state) {
             case states.INITIAL:
-                if (intent === 'HELP') {
-                    this.state = states.HELP;
-                    return await this.sendHelpOptions();
-                } else if (intent === 'BALANCE') {
-                    this.state = states.BALANCE;
-                    return "Fetching your balance...";
-                }
-                break;
+                return this.handleInitialState(intent);
 
             case states.BALANCE:
                 return await this.fetchBalance();
 
             case states.HELP:
-                if (intent === 'BALANCE') {
-                    this.state = states.BALANCE;
-                    return await this.fetchBalance();
-                } else if (intent === 'BILL_PAYMENT') {
-                    this.state = states.BILL_PAYMENT;
-                    return "Navigating to Bill Payment...";
-                }
-                // Handle other button responses...
-                break;
+                return this.handleHelpState(intent);
 
-            // Handle other states similarly...
+            case states.BILL_PAYMENT:
+                return "Navigating to Bill Payment..."; // Add the actual bill payment logic here
 
+            case states.RECENT_TRANSACTIONS:
+                return await this.fetchRecentTransactions(); // Implement this method
+
+            case states.MONEY_TRANSFER:
+                return "Navigating to Money Transfer..."; // Add the actual money transfer logic here
+
+            case states.SPENDS:
+                return await this.fetchSpends(); // Implement this method
+
+            case states.UPCOMING_PAYMENTS:
+                return await this.fetchUpcomingPayments(); // Implement this method
+
+            case states.CREDIT_DUES:
+                return await this.fetchCreditDues(); // Implement this method
+
+            case states.OUTSTANDING_LOAN:
+                return await this.fetchOutstandingLoan(); // Implement this method
+
+            case states.NEXT_LOAN:
+                return await this.fetchNextLoan(); // Implement this method
+
+            case states.LOCATE_ATM:
+                return await this.locateATM(); // Implement this method
+
+            case states.LOCATE_BRANCH:
+                return await this.locateBranch(); // Implement this method
+
+            case states.FINANCE_INQUIRY:
+                return await this.financeInquiry(); // Implement this method
+
+            default:
+                return "I'm not sure how to help with that. Try asking about your balance or say 'help'.";
+        }
+    }
+
+    handleInitialState(intent) {
+        switch (intent) {
+            case 'HELP':
+                this.state = states.HELP;
+                return this.sendHelpOptions();
+            case 'BALANCE':
+                this.state = states.BALANCE;
+                return "Fetching your balance...";
+            case 'BILL_PAYMENT':
+                this.state = states.BILL_PAYMENT;
+                return "Navigating to Bill Payment...";
+            case 'RECENT_TRANSACTIONS':
+                this.state = states.RECENT_TRANSACTIONS;
+                return "Fetching recent transactions...";
+            case 'MONEY_TRANSFER':
+                this.state = states.MONEY_TRANSFER;
+                return "Navigating to Money Transfer...";
+            // Handle other initial intents...
+            default:
+                return "I'm not sure how to help with that. Try asking about your balance or say 'help'.";
+        }
+    }
+
+    handleHelpState(intent) {
+        switch (intent) {
+            case 'BALANCE':
+                this.state = states.BALANCE;
+                return this.fetchBalance();
+            case 'BILL_PAYMENT':
+                this.state = states.BILL_PAYMENT;
+                return "Navigating to Bill Payment...";
+            case 'RECENT_TRANSACTIONS':
+                this.state = states.RECENT_TRANSACTIONS;
+                return "Fetching recent transactions...";
+            case 'MONEY_TRANSFER':
+                this.state = states.MONEY_TRANSFER;
+                return "Navigating to Money Transfer...";
+            case 'SPENDS':
+                this.state = states.SPENDS;
+                return this.fetchSpends();
+            case 'UPCOMING_PAYMENTS':
+                this.state = states.UPCOMING_PAYMENTS;
+                return this.fetchUpcomingPayments();
+            case 'CREDIT_DUES':
+                this.state = states.CREDIT_DUES;
+                return this.fetchCreditDues();
+            case 'OUTSTANDING_LOAN':
+                this.state = states.OUTSTANDING_LOAN;
+                return this.fetchOutstandingLoan();
+            case 'NEXT_LOAN':
+                this.state = states.NEXT_LOAN;
+                return this.fetchNextLoan();
+            case 'LOCATE_ATM':
+                this.state = states.LOCATE_ATM;
+                return this.locateATM();
+            case 'LOCATE_BRANCH':
+                this.state = states.LOCATE_BRANCH;
+                return this.locateBranch();
+            case 'FINANCE_INQUIRY':
+                this.state = states.FINANCE_INQUIRY;
+                return this.financeInquiry();
             default:
                 return "I'm not sure how to help with that. Try asking about your balance or say 'help'.";
         }
@@ -51,13 +143,13 @@ class StateMachine {
     async sendHelpOptions() {
         const helpMessage = {
             messaging_product: "whatsapp",
-            recipient_type: "individual", // Specify recipient type
+            recipient_type: "individual",
             to: "+916378582419", // Replace with the actual user ID dynamically
             type: "interactive",
             interactive: {
                 type: "button",
                 header: {
-                    type: "text", // Changed from "image" to "text" for the header
+                    type: "text",
                     text: "How can I assist you today?"
                 },
                 body: {
@@ -78,90 +170,18 @@ class StateMachine {
                 },
                 action: {
                     buttons: [
-                        {
-                            type: "reply",
-                            reply: {
-                                id: "BALANCE",
-                                title: "Balance"
-                            }
-                        },
-                        {
-                            type: "reply",
-                            reply: {
-                                id: "BILL_PAYMENT",
-                                title: "Pay Bill"
-                            }
-                        },
-                        {
-                            type: "reply",
-                            reply: {
-                                id: "RECENT_TRANSACTIONS",
-                                title: "Recent Transactions"
-                            }
-                        },
-                        {
-                            type: "reply",
-                            reply: {
-                                id: "MONEY_TRANSFER",
-                                title: "Money Transfer"
-                            }
-                        },
-                        {
-                            type: "reply",
-                            reply: {
-                                id: "SPENDS",
-                                title: "Spends"
-                            }
-                        },
-                        {
-                            type: "reply",
-                            reply: {
-                                id: "UPCOMING_PAYMENTS",
-                                title: "Upcoming Payments"
-                            }
-                        },
-                        {
-                            type: "reply",
-                            reply: {
-                                id: "CREDIT_DUES",
-                                title: "Credit Card Dues"
-                            }
-                        },
-                        {
-                            type: "reply",
-                            reply: {
-                                id: "OUTSTANDING_LOAN",
-                                title: "Outstanding Loan"
-                            }
-                        }, 
-                        {
-                            type: "reply",
-                            reply: {
-                                id: "NEXT_LOAN",
-                                title: "Next Loan"
-                            }
-                        },
-                        {
-                            type: "reply",
-                            reply: {
-                                id: "LOCATE_ATM",
-                                title: "Locate ATM"
-                            }
-                        },
-                         {
-                            type: "reply",
-                            reply: {
-                                id: "LOCATE_BRANCH",
-                                title: "Locate Branch"
-                            }
-                        },
-                           {
-                            type: "reply",
-                            reply: {
-                                id: "FINANCE_INQUIRY",
-                                title: "Finance Inquiry"
-                            }
-                        }
+                        { type: "reply", reply: { id: "BALANCE", title: "Balance" } },
+                        { type: "reply", reply: { id: "BILL_PAYMENT", title: "Pay Bill" } },
+                        { type: "reply", reply: { id: "RECENT_TRANSACTIONS", title: "Recent Transactions" } },
+                        { type: "reply", reply: { id: "MONEY_TRANSFER", title: "Money Transfer" } },
+                        { type: "reply", reply: { id: "SPENDS", title: "Spends" } },
+                        { type: "reply", reply: { id: "UPCOMING_PAYMENTS", title: "Upcoming Payments" } },
+                        { type: "reply", reply: { id: "CREDIT_DUES", title: "Credit Dues" } },
+                        { type: "reply", reply: { id: "OUTSTANDING_LOAN", title: "Outstanding Loan" } },
+                        { type: "reply", reply: { id: "NEXT_LOAN", title: "Next Loan" } },
+                        { type: "reply", reply: { id: "LOCATE_ATM", title: "Locate ATM" } },
+                        { type: "reply", reply: { id: "LOCATE_BRANCH", title: "Locate Branch" } },
+                        { type: "reply", reply: { id: "FINANCE_INQUIRY", title: "Finance Inquiry" } }
                     ]
                 }
             }
@@ -169,9 +189,7 @@ class StateMachine {
 
         try {
             const response = await axios.post(`https://graph.facebook.com/v17.0/${config.phoneNumberId}/messages?access_token=${config.whatsappToken}`, helpMessage, {
-                headers: {
-                    'Content-Type': 'application/json',
-                }
+                headers: { 'Content-Type': 'application/json' }
             });
             console.log("Help options sent successfully:", response.data);
             return "I've sent you the options. Please select one.";
@@ -197,6 +215,43 @@ class StateMachine {
             return "There was an error fetching your balance. Please try again later.";
         }
     }
+
+    // Define additional methods for other intents
+    async fetchRecentTransactions() {
+        // Implement your logic here
+    }
+
+    async fetchSpends() {
+        // Implement your logic here
+    }
+
+    async fetchUpcomingPayments() {
+        // Implement your logic here
+    }
+
+    async fetchCreditDues() {
+        // Implement your logic here
+    }
+
+    async fetchOutstandingLoan() {
+        // Implement your logic here
+    }
+
+    async fetchNextLoan() {
+        // Implement your logic here
+    }
+
+    async locateATM() {
+        // Implement your logic here
+    }
+
+    async locateBranch() {
+        // Implement your logic here
+    }
+
+    async financeInquiry() {
+        // Implement your logic here
+    }
 }
 
-module.exports = new StateMachine();
+module.exports = StateMachine;
