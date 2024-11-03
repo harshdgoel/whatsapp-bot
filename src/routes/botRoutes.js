@@ -5,7 +5,7 @@ const { WordTokenizer } = natural;
 const stateMachine = require('../states/stateMachine'); // Ensure your stateMachine can handle the new states
 const config = require('../config/config');
 const router = express.Router();
-
+const stateMachine = new StateMachine();
 // Updated intents with additional states
 const intents = {
     INITIAL: ["start", "begin", "hello", "hi", "greetings"],
