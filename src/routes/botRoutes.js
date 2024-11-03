@@ -1,61 +1,59 @@
 const express = require("express");
-const axios = require("axios");
 const natural = require("natural");
 const { WordTokenizer } = natural;
-const StateMachine = require('../states/stateMachine'); // Correctly instantiate StateMachine
+const StateMachine = require('../states/stateMachine');
 const config = require('../config/config');
 const router = express.Router();
-const stateMachine = new StateMachine(); // Ensure the state machine instance is created
+const stateMachine = new StateMachine();
 
-// Updated intents with additional states
 const intents = {
     INITIAL: ["start", "begin", "hello", "hi", "greetings"],
     HELP: ["help", "assist", "support", "what can you do"],
     BALANCE: ["balance", "check balance", "my balance", "account balance"],
     BILL_PAYMENT: ["pay bill", "bill payment", "utility payment", "pay my bill"],
-    RECENT_TRANSACTIONS: ["recent transactions", "latest transactions", "recent activity", "transaction history"],
-    MONEY_TRANSFER: ["transfer money", "send money", "money transfer", "pay someone"],
-    SPENDS: ["spends", "spending", "my spends"],
-    UPCOMING_PAYMENTS: ["upcoming payments", "next payments", "payments due"],
-    CREDIT_DUES: ["credit dues", "credit card dues", "due payments"],
-    OUTSTANDING_LOAN: ["outstanding loan", "loan details", "current loan"],
-    NEXT_LOAN: ["next loan", "upcoming loan", "future loan"],
+    RECENT_TRANSACTIONS: ["recent transactions", "latest transactions", "transaction history"],
+    MONEY_TRANSFER: ["money transfer", "send money", "transfer funds"],
+    SPENDS: ["spends", "expenses", "spending"],
+    UPCOMING_PAYMENTS: ["upcoming payments", "due payments"],
+    CREDIT_DUES: ["credit dues", "credit card due", "credit card payment"],
+    OUTSTANDING_LOAN: ["outstanding loan", "loan balance", "loan payment"],
+    NEXT_LOAN: ["next loan", "next installment", "loan due date"],
     LOCATE_ATM: ["locate atm", "find atm", "nearest atm"],
     LOCATE_BRANCH: ["locate branch", "find branch", "nearest branch"],
-    FINANCE_INQUIRY: ["finance inquiry", "financial question", "ask finance"]
-};
-
-const tokenizer = new WordTokenizer();
-
-const identifyIntent = (message) => {
-    const tokens = tokenizer.tokenize(message.toLowerCase());
-    for (const [intent, keywords] of Object.entries(intents)) {
-        if (keywords.some((keyword) => tokens.includes(keyword))) {
-            return intent;
-        }
-    }
-    return null; // Return null if no intent is found
+    FINANCE_INQUIRY: ["finance inquiry", "financial products", "banking services"]
 };
 
 router.post("/webhook", async (req, res) => {
-    const body = req.body;
+    const { entry } = req.body;
+    const messagingEvent = entry[0].changes[0].value.messages[0];
 
-    // Validate incoming webhook requests
-    if (body.object) {
-        // Handle the webhook events
-        if (body.entry && body.entry[0].changes && body.entry[0].changes[0].value.messages) {
-            const messageData = body.entry[0].changes[0].value.messages[0];
-            const from = messageData.from;
-            const messageBody = messageData.text.body;
-
-            // Identify the intent
-            const intent = identifyIntent(messageBody);
-            await stateMachine.handleMessage(from, messageBody, intent);
-        }
-        res.status(200).send("EVENT_RECEIVED");
-    } else {
-        res.sendStatus(404);
+    if (!messagingEvent) {
+        return res.status(400).send("No messaging event received.");
     }
+
+    const { from, text } = messagingEvent;
+    const messageBody = text.body;
+
+    // Tokenize the incoming message
+    const tokenizer = new WordTokenizer();
+    const tokens = tokenizer.tokenize(messageBody.toLowerCase());
+    
+    // Determine intent
+    let intent = identifyIntent(tokens);
+    
+    // Handle message
+    await stateMachine.handleMessage(from, messageBody, intent);
+
+    return res.sendStatus(200);
 });
+
+function identifyIntent(tokens) {
+    for (const [intent, keywords] of Object.entries(intents)) {
+        if (keywords.some(keyword => tokens.includes(keyword))) {
+            return intent;
+        }
+    }
+    return 'UNKNOWN';
+}
 
 module.exports = router;
