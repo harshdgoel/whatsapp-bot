@@ -25,14 +25,19 @@ const identifyIntent = (message) => {
 
 const sendMessageToWhatsApp = async (phoneNumberId, from, message) => {
     try {
-        // Replace with your WhatsApp sending logic
-        await axios.post(`https://api.whatsapp.com/send?phone=${phoneNumberId}`, {
+        const responseData = {
             messaging_product: "whatsapp",
             to: from,
             text: { body: message }
-        });
+        };
+        
+        const config = {
+            headers: { "Content-Type": "application/json" }
+        };
+
+        await axios.post(`https://graph.facebook.com/v17.0/${phoneNumberId}/messages`, responseData, config);
     } catch (error) {
-        console.error("Error sending message:", error);
+        console.error("Error sending message:", error.response ? error.response.data : error.message);
     }
 };
 
@@ -60,7 +65,7 @@ router.post("/webhook", async (req, res) => {
 
         await sendMessageToWhatsApp(phoneNumberId, from, responseMessage);
         
-        return res.sendStatus(200);
+        return res.status(200).json({ success: true, message: 'Message processed successfully' });
     }
 
     return res.sendStatus(404);
