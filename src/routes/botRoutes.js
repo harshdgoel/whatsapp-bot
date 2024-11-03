@@ -25,7 +25,12 @@ const intents = {
 
 router.post("/webhook", async (req, res) => {
     const { entry } = req.body;
+if (entry && entry[0] && entry[0].changes && entry[0].changes[0] && entry[0].changes[0].value && entry[0].changes[0].value.messages) {
     const messagingEvent = entry[0].changes[0].value.messages[0];
+    // Process the messaging event
+} else {
+    console.error("Received unexpected structure:", entry);
+}
 
     if (!messagingEvent) {
         return res.status(400).send("No messaging event received.");
