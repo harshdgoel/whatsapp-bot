@@ -67,11 +67,11 @@ class StateMachine {
         }
     }
 
-    handleInitialState(intent) {
+    async handleInitialState(intent) {
         switch (intent) {
             case 'HELP':
                 this.state = states.HELP;
-                return this.sendHelpOptions();
+                return await this.sendHelpOptions(); // Make this async
             case 'BALANCE':
                 this.state = states.BALANCE;
                 return "Fetching your balance...";
@@ -89,7 +89,7 @@ class StateMachine {
         }
     }
 
-    handleHelpState(intent) {
+    async handleHelpState(intent) {
         switch (intent) {
             case 'BALANCE':
                 this.state = states.BALANCE;
@@ -179,8 +179,56 @@ class StateMachine {
         }
     }
 
-    // ... [rest of your existing methods like fetchBalance, fetchRecentTransactions, etc.]
+    // Add your existing fetch methods here as async methods
+    async fetchBalance() {
+        // Example implementation for fetching balance
+        return "Your current balance is $100.00.";
+    }
 
+    async fetchRecentTransactions() {
+        // Example implementation for fetching recent transactions
+        return "Your recent transactions:\n- $20 at Coffee Shop\n- $50 at Grocery Store";
+    }
+
+    async fetchSpends() {
+        // Example implementation for fetching spends
+        return "Your total spends this month are $300.00.";
+    }
+
+    async fetchUpcomingPayments() {
+        // Example implementation for fetching upcoming payments
+        return "You have a payment of $50 due on November 10.";
+    }
+
+    async fetchCreditDues() {
+        // Example implementation for fetching credit card dues
+        return "Your credit card due is $200.00.";
+    }
+
+    async fetchOutstandingLoan() {
+        // Example implementation for fetching outstanding loan details
+        return "Your outstanding loan balance is $1,000.00.";
+    }
+
+    async fetchNextLoan() {
+        // Example implementation for fetching next loan details
+        return "Your next loan installment of $100.00 is due on November 15.";
+    }
+
+    async locateATM() {
+        // Example implementation for locating ATM
+        return "The nearest ATM is 0.5 miles away.";
+    }
+
+    async locateBranch() {
+        // Example implementation for locating a branch
+        return "The nearest branch is 1 mile away.";
+    }
+
+    async financeInquiry() {
+        // Example implementation for finance inquiry
+        return "What would you like to inquire about regarding finance?";
+    }
 }
 
 module.exports = StateMachine;
