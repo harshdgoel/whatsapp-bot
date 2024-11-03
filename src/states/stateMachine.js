@@ -52,7 +52,7 @@ class StateMachine {
         const helpMessage = {
             messaging_product: "whatsapp",
             recipient_type: "individual", // Specify recipient type
-            to: "106915092405923", // Replace with the actual user ID dynamically
+            to: "+916378582419", // Replace with the actual user ID dynamically
             type: "interactive",
             interactive: {
                 type: "button",
