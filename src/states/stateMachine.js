@@ -48,33 +48,36 @@ class StateMachine {
     }
 
     getHelpMessage() {
-        // Help message with a list of available services
-        return "Here's what I can help you with:\n" +
-               "1. View account balances\n" +
-               "2. Bill Payment\n" +
-               "3. Money Transfer\n" +
-               "4. Find a bank branch or ATM\n" +
-               "5. View recent transactions\n" +
-               "6. Inquire your spends\n" +
-               "7. Know your upcoming payments\n" +
-               "8. Inquire about dues on credit card\n" +
-               "9. Inquire about credit card limit\n" +
-               "10. Inquire your outstanding balance on loan account\n" +
-               "11. Inquire about next installment date and amount\n" +
-               "12. Get more information about banking products and services offered by Futura Bank\n" +
-               "13. New Account Opening info\n" +
-               "\nPlease respond with the number corresponding to the service you need.";
+        // Help message with a list of available services formatted as button-like options
+        return {
+            text: "Here's what I can help you with. Please select an option:",
+            buttons: [
+                { label: "View Account Balances", action: "BALANCE" },
+                { label: "Bill Payment", action: "BILL_PAYMENT" },
+                { label: "Money Transfer", action: "MONEY_TRANSFER" },
+                { label: "Find a Bank Branch or ATM", action: "FIND_BRANCH" },
+                { label: "View Recent Transactions", action: "RECENT_TRANSACTIONS" },
+                { label: "Inquire Your Spends", action: "INQUIRE_SPENDS" },
+                { label: "Know Your Upcoming Payments", action: "UPCOMING_PAYMENTS" },
+                { label: "Inquire About Dues on Credit Card", action: "DUES_CREDIT_CARD" },
+                { label: "Inquire About Credit Card Limit", action: "CREDIT_CARD_LIMIT" },
+                { label: "Outstanding Balance on Loan Account", action: "LOAN_BALANCE" },
+                { label: "Next Installment Date and Amount", action: "INSTALLMENT_INFO" },
+                { label: "Information About Banking Products", action: "BANK_PRODUCTS" },
+                { label: "New Account Opening Info", action: "NEW_ACCOUNT" }
+            ]
+        };
     }
 
     handleServiceSelection(selection) {
         switch (selection) {
-            case '1':
+            case 'BALANCE':
                 this.state = states.BALANCE;
                 return "Fetching your balance...";
-            case '2':
+            case 'BILL_PAYMENT':
                 this.state = states.BILL_PAYMENT;
                 return "Redirecting to Bill Payment...";
-            case '3':
+            case 'MONEY_TRANSFER':
                 this.state = states.MONEY_TRANSFER;
                 return "Redirecting to Money Transfer...";
             // Add more cases for each service...
