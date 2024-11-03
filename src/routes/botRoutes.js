@@ -3,6 +3,7 @@ const axios = require("axios");
 const natural = require("natural");
 const { WordTokenizer } = natural;
 const stateMachine = require('../states/stateMachine'); // Correct path to stateMachine.js
+const config = require('../config/config'); // Import the config to access environment variables
 const router = express.Router();
 
 const intents = {
@@ -23,21 +24,16 @@ const identifyIntent = (message) => {
     return null; // No matching intent
 };
 
-const sendMessageToWhatsApp = async (phoneNumberId, from, message) => {
+const sendMessageToWhatsApp = async (to, message) => {
     try {
-        const responseData = {
+        // Use the phone number ID from the .env file
+        await axios.post(`https://graph.facebook.com/v17.0/${config.phoneNumberId}/messages?access_token=${config.whatsappToken}`, {
             messaging_product: "whatsapp",
-            to: from,
+            to: to,
             text: { body: message }
-        };
-        
-        const config = {
-            headers: { "Content-Type": "application/json" }
-        };
-
-        await axios.post(`https://graph.facebook.com/v17.0/${phoneNumberId}/messages`, responseData, config);
+        });
     } catch (error) {
-        console.error("Error sending message:", error.response ? error.response.data : error.message);
+        console.error("Error sending message:", error);
     }
 };
 
@@ -53,8 +49,7 @@ router.post("/webhook", async (req, res) => {
 
     if (changes.messages && changes.messages.length > 0) {
         const message = changes.messages[0];
-        const phoneNumberId = changes.metadata.phone_number_id;
-        const from = message.from;
+        const from = message.from; // Sender's number
         const messageBody = message.text.body;
 
         // Identify user intent
@@ -63,9 +58,10 @@ router.post("/webhook", async (req, res) => {
         // Transition state based on the identified intent
         const responseMessage = stateMachine.transition(intent);
 
-        await sendMessageToWhatsApp(phoneNumberId, from, responseMessage);
+        // Send the message using the configured phone number ID
+        await sendMessageToWhatsApp(from, responseMessage);
         
-        return res.status(200).json({ success: true, message: 'Message processed successfully' });
+        return res.sendStatus(200);
     }
 
     return res.sendStatus(404);
