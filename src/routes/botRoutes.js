@@ -2,7 +2,7 @@ const express = require("express");
 const axios = require("axios");
 const natural = require("natural");
 const { WordTokenizer } = natural;
-const stateMachine = require('../states/serverState'); // Ensure your stateMachine can handle the new states
+const stateMachine = require('../states/stateMachine'); // Ensure your stateMachine can handle the new states
 const config = require('../config/config');
 const router = express.Router();
 
