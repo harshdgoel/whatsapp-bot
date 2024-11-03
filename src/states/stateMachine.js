@@ -16,7 +16,7 @@ const states = {
     NEXT_LOAN: 'NEXT_LOAN',
     LOCATE_ATM: 'LOCATE_ATM',
     LOCATE_BRANCH: 'LOCATE_BRANCH',
-    FINANCE_INQUIRY: 'FINANCE_INQUIRY',
+    FINANCE_INQUIRY: 'FINANCE_INQUIRY'
     // Add more states as necessary
 };
 
