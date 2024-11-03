@@ -93,13 +93,13 @@ class StateMachine {
         switch (intent) {
             case 'BALANCE':
                 this.state = states.BALANCE;
-                return this.fetchBalance();
+                return await this.fetchBalance();
             case 'BILL_PAYMENT':
                 this.state = states.BILL_PAYMENT;
                 return "Navigating to Bill Payment...";
             case 'RECENT_TRANSACTIONS':
                 this.state = states.RECENT_TRANSACTIONS;
-                return this.fetchRecentTransactions();
+                return await this.fetchRecentTransactions();
             case 'MONEY_TRANSFER':
                 this.state = states.MONEY_TRANSFER;
                 return "Navigating to Money Transfer...";
@@ -153,8 +153,11 @@ class StateMachine {
                     ]
                 }
             }
-        }
-        }
+        };
+
+        // Send help message to the user
+        await this.sendResponse(helpMessage.to, helpMessage);
+    }
 
     async sendResponse(to, message) {
         const responseMessage = {
@@ -176,7 +179,7 @@ class StateMachine {
         }
     }
 
-    // ... [rest of your existing methods like sendHelpOptions, fetchBalance, etc.]
+    // ... [rest of your existing methods like fetchBalance, fetchRecentTransactions, etc.]
 
 }
 
