@@ -159,25 +159,25 @@ class StateMachine {
         await this.sendResponse(helpMessage.to, helpMessage);
     }
 
-    async sendResponse(to, message) {
-        const responseMessage = {
-            messaging_product: "whatsapp",
-            recipient_type: "individual",
-            to: to,
-            type: "text",
-            text: {
-                body: message
-            }
-        };
-
-        try {
-            await axios.post(`${config.whatsappApiUrl}/messages`, responseMessage, {
-                headers: { 'Authorization': `Bearer ${process.env.WHATSAPP_API_TOKEN}` }
-            });
-        } catch (error) {
-            console.error("Error sending response:", error);
+   async sendResponse(to, message) {
+    const responseMessage = {
+        messaging_product: "whatsapp",
+        to: to,
+        text: {
+            body: message
         }
+    };
+
+    // Construct the correct URL using phoneNumberId and token
+    const url = `https://graph.facebook.com/v17.0/${config.phoneNumberId}/messages?access_token=${config.whatsappToken}`;
+
+    try {
+        await axios.post(url, responseMessage);
+    } catch (error) {
+        console.error("Error sending response:", error);
     }
+}
+
 
     // Add your existing fetch methods here as async methods
     async fetchBalance() {
