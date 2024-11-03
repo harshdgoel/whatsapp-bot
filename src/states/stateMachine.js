@@ -153,7 +153,8 @@ class StateMachine {
                     ]
                 }
             }
-        };
+        }
+        }
 
     async sendResponse(to, message) {
         const responseMessage = {
