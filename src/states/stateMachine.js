@@ -170,10 +170,7 @@ class StateMachine {
             body: message
         }
     };
-
-    // Construct the correct URL using phoneNumberId and token
     const url = `https://graph.facebook.com/v17.0/${config.phoneNumberId}/messages?access_token=${config.whatsappToken}`;
-
     try {
         await axios.post(url, responseMessage);
     } catch (error) {
