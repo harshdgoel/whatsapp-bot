@@ -5,7 +5,6 @@ const config = require("../config/config"); // Ensure this file contains your co
 const states = {
     INITIAL: 'INITIAL',
     HELP: 'HELP',
-    SELECT_SERVICE: 'SELECT_SERVICE',
     BALANCE: 'BALANCE',
     BILL_PAYMENT: 'BILL_PAYMENT',
     // Add more states as necessary
@@ -21,18 +20,63 @@ class StateMachine {
             case states.INITIAL:
                 if (intent === 'HELP') {
                     this.state = states.HELP;
-                    // Display the list of available services
-                    return this.getHelpMessage();
+                    return {
+                        interactive: {
+                            type: "button",
+                            header: {
+                                type: "text",
+                                text: "How can I assist you?"
+                            },
+                            body: {
+                                text: "Here's what I can help you with:"
+                            },
+                            footer: {
+                                text: "Please select an option below."
+                            },
+                            action: {
+                                buttons: [
+                                    {
+                                        type: "reply",
+                                        reply: {
+                                            id: "viewBalance",
+                                            title: "View Balance"
+                                        }
+                                    },
+                                    {
+                                        type: "reply",
+                                        reply: {
+                                            id: "billPayment",
+                                            title: "Bill Payment"
+                                        }
+                                    },
+                                    {
+                                        type: "reply",
+                                        reply: {
+                                            id: "moneyTransfer",
+                                            title: "Money Transfer"
+                                        }
+                                    },
+                                    {
+                                        type: "reply",
+                                        reply: {
+                                            id: "findBranch",
+                                            title: "Find Branch/ATM"
+                                        }
+                                    },
+                                    {
+                                        type: "reply",
+                                        reply: {
+                                            id: "recentTransactions",
+                                            title: "Recent Transactions"
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    };
                 } else if (intent === 'BALANCE') {
                     this.state = states.BALANCE;
                     return "Fetching your balance...";
-                }
-                break;
-
-            case states.HELP:
-                if (intent === 'SELECT_SERVICE') {
-                    this.state = states.SELECT_SERVICE;
-                    return "Please select one of the services from the list.";
                 }
                 break;
 
@@ -40,49 +84,12 @@ class StateMachine {
                 // Logic to fetch and return the balance
                 return this.fetchBalance();
 
-            // Add more cases for other states...
+            // Handle other states similarly...
 
             default:
-                return "I'm not sure how to help with that. Try asking about your balance or say 'help'.";
-        }
-    }
-
-    getHelpMessage() {
-        // Help message with a list of available services formatted as button-like options
-        return {
-            text: "Here's what I can help you with. Please select an option:",
-            buttons: [
-                { label: "View Account Balances", action: "BALANCE" },
-                { label: "Bill Payment", action: "BILL_PAYMENT" },
-                { label: "Money Transfer", action: "MONEY_TRANSFER" },
-                { label: "Find a Bank Branch or ATM", action: "FIND_BRANCH" },
-                { label: "View Recent Transactions", action: "RECENT_TRANSACTIONS" },
-                { label: "Inquire Your Spends", action: "INQUIRE_SPENDS" },
-                { label: "Know Your Upcoming Payments", action: "UPCOMING_PAYMENTS" },
-                { label: "Inquire About Dues on Credit Card", action: "DUES_CREDIT_CARD" },
-                { label: "Inquire About Credit Card Limit", action: "CREDIT_CARD_LIMIT" },
-                { label: "Outstanding Balance on Loan Account", action: "LOAN_BALANCE" },
-                { label: "Next Installment Date and Amount", action: "INSTALLMENT_INFO" },
-                { label: "Information About Banking Products", action: "BANK_PRODUCTS" },
-                { label: "New Account Opening Info", action: "NEW_ACCOUNT" }
-            ]
-        };
-    }
-
-    handleServiceSelection(selection) {
-        switch (selection) {
-            case 'BALANCE':
-                this.state = states.BALANCE;
-                return "Fetching your balance...";
-            case 'BILL_PAYMENT':
-                this.state = states.BILL_PAYMENT;
-                return "Redirecting to Bill Payment...";
-            case 'MONEY_TRANSFER':
-                this.state = states.MONEY_TRANSFER;
-                return "Redirecting to Money Transfer...";
-            // Add more cases for each service...
-            default:
-                return "Invalid selection. Please choose a valid option from the list.";
+                return {
+                    text: "I'm not sure how to help with that. Try asking about your balance or say 'help'."
+                };
         }
     }
 
