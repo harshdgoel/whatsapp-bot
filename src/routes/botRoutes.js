@@ -2,8 +2,8 @@ const express = require("express");
 const axios = require("axios");
 const natural = require("natural");
 const { WordTokenizer } = natural;
-const stateMachine = require('../states/stateMachine'); // Correct path to stateMachine.js
-const config = require('../config/config'); // Import the config to access environment variables
+const stateMachine = require('../states/stateMachine'); 
+const config = require('../config/config');
 const router = express.Router();
 
 const intents = {
@@ -26,7 +26,6 @@ const identifyIntent = (message) => {
 
 const sendMessageToWhatsApp = async (to, message) => {
     try {
-        // Use the phone number ID from the .env file
         await axios.post(`https://graph.facebook.com/v17.0/${config.phoneNumberId}/messages?access_token=${config.whatsappToken}`, {
             messaging_product: "whatsapp",
             to: to,
@@ -49,14 +48,14 @@ router.post("/webhook", async (req, res) => {
 
     if (changes.messages && changes.messages.length > 0) {
         const message = changes.messages[0];
-        const from = message.from; // Sender's number
+        const from = message.from; 
         const messageBody = message.text.body;
 
         // Identify user intent
         const intent = identifyIntent(messageBody);
 
         // Transition state based on the identified intent
-        const responseMessage = stateMachine.transition(intent);
+        const responseMessage = await stateMachine.transition(intent); // Ensure this is awaited
 
         // Send the message using the configured phone number ID
         await sendMessageToWhatsApp(from, responseMessage);
