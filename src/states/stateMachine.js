@@ -21,7 +21,20 @@ class StateMachine {
                 if (intent === 'HELP') {
                     this.state = states.HELP;
 
-                    const helpMessage = "🤖 *Here's what I can help you with:* 1️⃣ *View Account Balances* | 2️⃣ *Bill Payment* | 3️⃣ *Money Transfer* | 4️⃣ *Find a Bank Branch or ATM* | 5️⃣ *View Recent Transactions* | 6️⃣ *Inquire Your Spends* | 7️⃣ *Know Your Upcoming Payments* | 8️⃣ *Inquire About Dues on Credit Card* | 9️⃣ *Inquire About Credit Card Limit* | 🔟 *Inquire Your Outstanding Balance on Loan Account* | 1️⃣1️⃣ *Inquire About Next Installment Date and Amount* | 1️⃣2️⃣ *Get More Information About Banking Products and Services* | 1️⃣3️⃣ *New Account Opening Info* | Please type the number or name of the service you're interested in!";
+                    const helpMessage ="Here's what I can help you with:\n" +
+                           "- View account balances\n" +
+                           "- Bill Payment\n" +
+                           "- Money Transfer\n" +
+                           "- Find a bank branch or ATM\n" +
+                           "- View recent transactions\n" +
+                           "- Inquire your spends\n" +
+                           "- Know your upcoming payments\n" +
+                           "- Inquire about dues on credit card\n" +
+                           "- Inquire about credit card limit\n" +
+                           "- Inquire your outstanding balance on loan account\n" +
+                           "- Inquire about next installment date and amount\n" +
+                           "- Get more information about banking products and services offered by Futura Bank\n" +
+                           "- New Account Opening info";
                     
                     await this.sendMessage(from, helpMessage);
 
