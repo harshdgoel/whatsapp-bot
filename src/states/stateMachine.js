@@ -72,7 +72,7 @@ class StateMachine {
                             type: "reply",
                             reply: {
                                 id: "BALANCE",
-                                title: "View Account Balances"
+                                title: "Balance"
                             }
                         },
                         {
