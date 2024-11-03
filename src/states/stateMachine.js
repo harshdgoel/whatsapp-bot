@@ -15,35 +15,68 @@ class StateMachine {
         this.state = states.INITIAL;
     }
 
-    async transition(intent, from) {  // Added 'from' to send messages
+    async transition(intent, from) {
         switch (this.state) {
             case states.INITIAL:
                 if (intent === 'HELP') {
                     this.state = states.HELP;
 
-                    // Prepare help message with buttons
-                    const helpMessage = "🤖 *Here's what I can help you with:*";
-                    
-                    const buttons = [
-                        { "type": "reply", "reply": { "id": "BALANCE", "title": "View Account Balances" }},
-                        { "type": "reply", "reply": { "id": "BILL_PAYMENT", "title": "Bill Payment" }},
-                        { "type": "reply", "reply": { "id": "MONEY_TRANSFER", "title": "Money Transfer" }},
-                        { "type": "reply", "reply": { "id": "FIND_BRANCH", "title": "Find a Bank Branch or ATM" }},
-                        { "type": "reply", "reply": { "id": "RECENT_TRANSACTIONS", "title": "View Recent Transactions" }},
-                        { "type": "reply", "reply": { "id": "SPENDS", "title": "Inquire Your Spends" }},
-                        { "type": "reply", "reply": { "id": "UPCOMING_PAYMENTS", "title": "Know Your Upcoming Payments" }},
-                        { "type": "reply", "reply": { "id": "DUES_CC", "title": "Inquire About Dues on Credit Card" }},
-                        { "type": "reply", "reply": { "id": "LIMIT_CC", "title": "Inquire About Credit Card Limit" }},
-                        { "type": "reply", "reply": { "id": "OUTSTANDING_LOAN", "title": "Inquire Your Outstanding Balance on Loan Account" }},
-                        { "type": "reply", "reply": { "id": "NEXT_INSTALLMENT", "title": "Inquire About Next Installment Date and Amount" }},
-                        { "type": "reply", "reply": { "id": "BANKING_PRODUCTS", "title": "Get More Information About Banking Products and Services" }},
-                        { "type": "reply", "reply": { "id": "NEW_ACCOUNT", "title": "New Account Opening Info" }}
-                    ];
+                    // Prepare the help text message
+                    const helpMessage = {
+                        text: {
+                            body: "🤖 *Here's what I can help you with:*"
+                        }
+                    };
 
-                    // Send help message with buttons
-                    await this.sendMessage(from, { text: helpMessage });
-                    await this.sendMessage(from, { type: "interactive", interactive: { type: "button", body: { text: "Please choose an option:" }, action: { buttons: buttons } } });
+                    // Send the text message
+                    await this.sendMessage(from, helpMessage);
 
+                    // Prepare the list message
+                    const listMessage = {
+                        messaging_product: "whatsapp",
+                        to: from,
+                        type: "interactive",
+                        interactive: {
+                            type: "list",
+                            header: {
+                                type: "text",
+                                text: "Choose an option"
+                            },
+                            body: {
+                                text: "Select one of the following services:"
+                            },
+                            footer: {
+                                text: "Futura Bank Services"
+                            },
+                            action: {
+                                button: "View Options",
+                                sections: [
+                                    {
+                                        title: "Banking Services",
+                                        rows: [
+                                            { id: "BALANCE", title: "View Account Balances", description: "Check your current account balances" },
+                                            { id: "BILL_PAYMENT", title: "Bill Payment", description: "Pay your bills quickly" },
+                                            { id: "MONEY_TRANSFER", title: "Money Transfer", description: "Transfer money to others" },
+                                            { id: "TRANSACTIONS", title: "View Recent Transactions", description: "See your latest transactions" }
+                                            // Add more rows as necessary
+                                        ]
+                                    },
+                                    {
+                                        title: "Information Services",
+                                        rows: [
+                                            { id: "ATM_LOCATOR", title: "Find a Bank Branch or ATM", description: "Locate nearby ATMs or branches" },
+                                            { id: "LOAN_INFO", title: "Loan Information", description: "Inquire about your loan details" },
+                                            { id: "CREDIT_CARD", title: "Credit Card Details", description: "Know your credit card limits and dues" }
+                                            // Add more rows as necessary
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    };
+
+                    // Send the list message
+                    await this.sendMessage(from, listMessage);
                     return; // Exit to prevent further processing
                 } else if (intent === 'BALANCE') {
                     this.state = states.BALANCE;
@@ -53,7 +86,7 @@ class StateMachine {
 
             case states.BALANCE:
                 // Logic to fetch and return the balance
-                return await this.fetchBalance(); // Ensure this is awaited
+                return await this.fetchBalance(from);
 
             // Handle other states similarly...
 
@@ -62,42 +95,52 @@ class StateMachine {
         }
     }
 
-    async fetchBalance() {
+    async sendMessage(to, message) {
+        // Ensure 'to' is defined
+        if (!to) {
+            console.error("Recipient phone number is undefined.");
+            return;
+        }
+
+        // Wrap the message in the correct structure
+        const messagePayload = {
+            messaging_product: "whatsapp",
+            to: to,
+            ...message // Include the message object directly
+        };
+
+        console.log("Sending message:", messagePayload);
+
+        try {
+            const response = await axios.post(
+                `https://graph.facebook.com/v17.0/${config.phoneNumberId}/messages?access_token=${config.whatsappToken}`,
+                messagePayload
+            );
+            return response.data; // Return the response for further processing if needed
+        } catch (error) {
+            console.error("Error sending message:", error.response ? error.response.data : error.message);
+        }
+    }
+
+    async fetchBalance(from) {
         const options = {
             // Define any additional options you may want to include
         };
 
-        const config = {
+        const requestConfig = {
             headers: {
-                // Include any headers if needed
                 'Authorization': `Bearer ${config.whatsappToken}`, // If your API requires an auth token
                 'Content-Type': 'application/json' // Add any other headers your API requires
             }
         };
 
         try {
-            const response = await axios.get('http://example.com/api/balance', { ...options, ...config });
+            const response = await axios.get('http://example.com/api/balance', { ...options, ...requestConfig });
             const balanceData = response.data; // Process response accordingly
             return `Your balance is $${balanceData.balance}.`; // Modify based on actual response structure
         } catch (error) {
             console.error("Error fetching balance:", error.response ? error.response.data : error.message);
             return "There was an error fetching your balance. Please try again later.";
-        }
-    }
-
-    async sendMessage(to, message) {
-        const messagePayload = {
-            messaging_product: "whatsapp",
-            to: to,
-            ...message // Send the complete message payload
-        };
-
-        console.log("Sending message:", messagePayload);
-
-        try {
-            await axios.post(`https://graph.facebook.com/v17.0/${config.phoneNumberId}/messages?access_token=${config.whatsappToken}`, messagePayload);
-        } catch (error) {
-            console.error("Error sending message:", error.response ? error.response.data : error.message);
         }
     }
 }
