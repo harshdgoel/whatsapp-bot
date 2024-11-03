@@ -2,32 +2,30 @@ const express = require("express");
 const axios = require("axios");
 const natural = require("natural");
 const { WordTokenizer } = natural;
-const stateMachine = require('../states/stateMachine');
+const stateMachine = require('../states/serverState'); // Ensure your stateMachine can handle the new states
 const config = require('../config/config');
 const router = express.Router();
 
-// Define intents and keywords
+// Updated intents with additional states
 const intents = {
-    INITIAL: ["start", "begin", "initiate", "initial"],
-    HELP: ["help", "assist", "support", "guidance", "how to"],
+    INITIAL: ["start", "begin", "hello", "hi", "greetings"],
+    HELP: ["help", "assist", "support", "what can you do"],
     BALANCE: ["balance", "check balance", "my balance", "account balance"],
     BILL_PAYMENT: ["pay bill", "bill payment", "utility payment", "pay my bill"],
     RECENT_TRANSACTIONS: ["recent transactions", "latest transactions", "recent activity", "transaction history"],
     MONEY_TRANSFER: ["transfer money", "send money", "money transfer", "pay someone"],
-    SPENDS: ["spends", "expenditure", "how much did I spend", "spending summary"],
-    UPCOMING_PAYMENTS: ["upcoming payments", "future payments", "scheduled payments", "due payments"],
-    CREDIT_DUES: ["credit dues", "credit card payment", "outstanding credit", "due amount"],
-    OUTSTANDING_LOAN: ["outstanding loan", "loan balance", "remaining loan", "loan amount due"],
-    NEXT_LOAN: ["next loan", "future loan", "new loan options", "loan inquiry"],
-    LOCATE_ATM: ["locate atm", "nearest atm", "find atm", "atm nearby"],
-    LOCATE_BRANCH: ["locate branch", "nearest branch", "find bank branch", "bank location"],
-    FINANCE_INQUIRY: ["finance inquiry", "financial query", "financial information", "investment inquiry"]
+    SPENDS: ["spends", "spending", "my spends"],
+    UPCOMING_PAYMENTS: ["upcoming payments", "next payments", "payments due"],
+    CREDIT_DUES: ["credit dues", "credit card dues", "due payments"],
+    OUTSTANDING_LOAN: ["outstanding loan", "loan details", "current loan"],
+    NEXT_LOAN: ["next loan", "upcoming loan", "future loan"],
+    LOCATE_ATM: ["locate atm", "find atm", "nearest atm"],
+    LOCATE_BRANCH: ["locate branch", "find branch", "nearest branch"],
+    FINANCE_INQUIRY: ["finance inquiry", "financial question", "ask finance"]
 };
 
-// Initialize tokenizer
 const tokenizer = new WordTokenizer();
 
-// Identify intent from user message
 const identifyIntent = (message) => {
     const tokens = tokenizer.tokenize(message.toLowerCase());
     for (const [intent, keywords] of Object.entries(intents)) {
@@ -35,10 +33,9 @@ const identifyIntent = (message) => {
             return intent;
         }
     }
-    return "UNKNOWN"; // Return 'UNKNOWN' if no intent is matched
+    return null; // No matching intent
 };
 
-// Function to send a message to WhatsApp using the API
 const sendMessageToWhatsApp = async (to, message) => {
     try {
         await axios.post(`https://graph.facebook.com/v17.0/${config.phoneNumberId}/messages?access_token=${config.whatsappToken}`, {
@@ -51,7 +48,6 @@ const sendMessageToWhatsApp = async (to, message) => {
     }
 };
 
-// Webhook route to handle incoming messages
 router.post("/webhook", async (req, res) => {
     const bodyParam = req.body;
     console.log("Received webhook body:", JSON.stringify(bodyParam));
@@ -67,19 +63,11 @@ router.post("/webhook", async (req, res) => {
         const from = message.from;
         const messageBody = message.text.body;
 
-        // Identify user intent
+        // Identify user intent and handle state transitions
         const intent = identifyIntent(messageBody);
+        const responseMessage = await stateMachine.handleMessage(from, messageBody, intent);
 
-        // Transition state based on the identified intent
-        let responseMessage;
-        try {
-            responseMessage = await stateMachine.transition(intent);
-        } catch (error) {
-            console.error("Error transitioning state:", error);
-            responseMessage = "Sorry, I couldn't understand your request. Please try again or ask for help.";
-        }
-
-        // Send the response message using WhatsApp
+        // Send the response message
         await sendMessageToWhatsApp(from, responseMessage);
 
         return res.sendStatus(200);
