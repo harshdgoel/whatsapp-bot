@@ -5,6 +5,7 @@ const config = require("../config/config"); // Ensure this file contains your co
 const states = {
     INITIAL: 'INITIAL',
     HELP: 'HELP',
+    SELECT_SERVICE: 'SELECT_SERVICE',
     BALANCE: 'BALANCE',
     BILL_PAYMENT: 'BILL_PAYMENT',
     // Add more states as necessary
@@ -15,127 +16,88 @@ class StateMachine {
         this.state = states.INITIAL;
     }
 
-    async transition(intent, from) {
+    transition(intent) {
         switch (this.state) {
             case states.INITIAL:
                 if (intent === 'HELP') {
                     this.state = states.HELP;
-
-                    // Prepare the help text message
-                    const helpMessage = {
-                        text: {
-                            body: "🤖 *Here's what I can help you with:*"
-                        }
-                    };
-
-                    // Send the text message
-                    await this.sendMessage(from, helpMessage);
-
-                    // Prepare the list message
-                    const listMessage = {
-                        messaging_product: "whatsapp",
-                        to: from,
-                        type: "interactive",
-                        interactive: {
-                            type: "list",
-                            header: {
-                                type: "text",
-                                text: "Choose an option"
-                            },
-                            body: {
-                                text: "Select one of the following services:"
-                            },
-                            footer: {
-                                text: "Futura Bank Services"
-                            },
-                            action: {
-                                button: "View Options",
-                                sections: [
-                                    {
-                                        title: "Banking Services",
-                                        rows: [
-                                            { id: "BALANCE", title: "View Account Balances", description: "Check your current account balances" },
-                                            { id: "BILL_PAYMENT", title: "Bill Payment", description: "Pay your bills quickly" },
-                                            { id: "MONEY_TRANSFER", title: "Money Transfer", description: "Transfer money to others" },
-                                            { id: "TRANSACTIONS", title: "View Recent Transactions", description: "See your latest transactions" }
-                                            // Add more rows as necessary
-                                        ]
-                                    },
-                                    {
-                                        title: "Information Services",
-                                        rows: [
-                                            { id: "ATM_LOCATOR", title: "Find a Bank Branch or ATM", description: "Locate nearby ATMs or branches" },
-                                            { id: "LOAN_INFO", title: "Loan Information", description: "Inquire about your loan details" },
-                                            { id: "CREDIT_CARD", title: "Credit Card Details", description: "Know your credit card limits and dues" }
-                                            // Add more rows as necessary
-                                        ]
-                                    }
-                                ]
-                            }
-                        }
-                    };
-
-                    // Send the list message
-                    await this.sendMessage(from, listMessage);
-                    return; // Exit to prevent further processing
+                    // Display the list of available services
+                    return this.getHelpMessage();
                 } else if (intent === 'BALANCE') {
                     this.state = states.BALANCE;
                     return "Fetching your balance...";
                 }
                 break;
 
+            case states.HELP:
+                if (intent === 'SELECT_SERVICE') {
+                    this.state = states.SELECT_SERVICE;
+                    return "Please select one of the services from the list.";
+                }
+                break;
+
             case states.BALANCE:
                 // Logic to fetch and return the balance
-                return await this.fetchBalance(from);
+                return this.fetchBalance();
 
-            // Handle other states similarly...
+            // Add more cases for other states...
 
             default:
                 return "I'm not sure how to help with that. Try asking about your balance or say 'help'.";
         }
     }
 
-    async sendMessage(to, message) {
-        // Ensure 'to' is defined
-        if (!to) {
-            console.error("Recipient phone number is undefined.");
-            return;
-        }
+    getHelpMessage() {
+        // Help message with a list of available services
+        return "Here's what I can help you with:\n" +
+               "1. View account balances\n" +
+               "2. Bill Payment\n" +
+               "3. Money Transfer\n" +
+               "4. Find a bank branch or ATM\n" +
+               "5. View recent transactions\n" +
+               "6. Inquire your spends\n" +
+               "7. Know your upcoming payments\n" +
+               "8. Inquire about dues on credit card\n" +
+               "9. Inquire about credit card limit\n" +
+               "10. Inquire your outstanding balance on loan account\n" +
+               "11. Inquire about next installment date and amount\n" +
+               "12. Get more information about banking products and services offered by Futura Bank\n" +
+               "13. New Account Opening info\n" +
+               "\nPlease respond with the number corresponding to the service you need.";
+    }
 
-        // Wrap the message in the correct structure
-        const messagePayload = {
-            messaging_product: "whatsapp",
-            to: to,
-            ...message // Include the message object directly
-        };
-
-        console.log("Sending message:", messagePayload);
-
-        try {
-            const response = await axios.post(
-                `https://graph.facebook.com/v17.0/${config.phoneNumberId}/messages?access_token=${config.whatsappToken}`,
-                messagePayload
-            );
-            return response.data; // Return the response for further processing if needed
-        } catch (error) {
-            console.error("Error sending message:", error.response ? error.response.data : error.message);
+    handleServiceSelection(selection) {
+        switch (selection) {
+            case '1':
+                this.state = states.BALANCE;
+                return "Fetching your balance...";
+            case '2':
+                this.state = states.BILL_PAYMENT;
+                return "Redirecting to Bill Payment...";
+            case '3':
+                this.state = states.MONEY_TRANSFER;
+                return "Redirecting to Money Transfer...";
+            // Add more cases for each service...
+            default:
+                return "Invalid selection. Please choose a valid option from the list.";
         }
     }
 
-    async fetchBalance(from) {
+    async fetchBalance() {
         const options = {
             // Define any additional options you may want to include
         };
 
-        const requestConfig = {
+        const config = {
             headers: {
+                // Include any headers if needed
                 'Authorization': `Bearer ${config.whatsappToken}`, // If your API requires an auth token
                 'Content-Type': 'application/json' // Add any other headers your API requires
             }
         };
 
         try {
-            const response = await axios.get('http://example.com/api/balance', { ...options, ...requestConfig });
+            const response = await axios.get('http://example.com/api/balance', { ...options, ...config });
             const balanceData = response.data; // Process response accordingly
             return `Your balance is $${balanceData.balance}.`; // Modify based on actual response structure
         } catch (error) {
