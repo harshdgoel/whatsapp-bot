@@ -82,7 +82,7 @@ class StateMachine {
         };
 
         try {
-            const response = await axios.post(`https://graph.facebook.com/v17.0/${config.phoneNumberId}/messages?access_token=${process.env.WHATSAPP_TOKEN}`, helpMessage, {
+            const response = await axios.post(`https://graph.facebook.com/v17.0/${config.phoneNumberId}/messages?access_token=${config.WHATSAPP_TOKEN}`, helpMessage, {
                 headers: {
                     'Content-Type': 'application/json',
                 }
