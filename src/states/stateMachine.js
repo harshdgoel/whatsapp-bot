@@ -109,9 +109,11 @@ class StateMachine {
                             'Cookie': 'secretKey=i0gWjmcjtQlaXniQ7yA3sObMhIY1Z3Ap'
                         }
                     });
-
+                    console.log("finalLoginResponse:", finalLoginResponse);
+                    console.log(finalLoginResponse.data.status.result);
                     if (finalLoginResponse.data.status.result === "SUCCESSFUL") {
                         this.state = states.LOGGED_IN; // Transition to logged-in state
+                        console.log("login now success");
                         return "You have successfully verified your OTP and logged in. You can now access your account.";
                     } else {
                         console.error("Final login failed:", finalLoginResponse.data); // Log the failure response
