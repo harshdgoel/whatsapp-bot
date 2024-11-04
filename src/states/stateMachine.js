@@ -123,6 +123,7 @@ class StateMachine {
                 });
 
                 if (otpResponse.data.status.result === "SUCCESSFUL") {
+                    console.log('FINAL LOGIN SUCS');
                     this.registrationId = otpResponse.data.registrationId; // Store registrationId
                     const finalLoginResponse = await axios.post('https://rncne-148-87-23-5.a.free.pinggy.link/digx-infra/login/v1/login?locale=en', {
                         mobileNumber: this.mobileNumber,
@@ -137,6 +138,9 @@ class StateMachine {
                             'X-Target-Unit': 'OBDX_BU',
                         }
                     });
+                    console.log('FINAL LOGIN RES:',finalLoginResponse);
+                    console.log('FINAL LOGIN COOKIE:',finalLoginResponse.headers['set-cookie']);
+
 
                     // Extract cookies from the response headers
                     const setCookie = finalLoginResponse.headers['set-cookie'];
