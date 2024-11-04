@@ -87,7 +87,11 @@ class StateMachine {
                 });
 
                 if (otpResponse.data.status.result === "SUCCESSFUL") {
-                                console.log("Second login call")
+                                console.log("Second login call");
+                                console.log("otpResponse",otpResponse);
+                                console.log("registrationId",otpResponse.data.registrationId);
+
+
                     this.registrationId = otpResponse.data.registrationId; // Store registrationId
                     
                     // Final API call to login with registrationId
