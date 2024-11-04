@@ -22,39 +22,42 @@ class StateMachine {
     }
 
     // Auth module to manage token securely
-    createAuthModule() {
-        let anonymousToken = '';
-        let sessionToken = '';
+ createAuthModule() {
+    let anonymousToken = '';
+    let sessionToken = '';
+    let cookies = ''; // Change this to a local variable
 
-        return {
-            setAnonymousToken: (value) => {
-                anonymousToken = value;
-            },
-            setSessionToken: (value) => {
-                sessionToken = value;
-            },
-            setCookies: (value) => {
-                this.cookies = value; // Save cookies
-            },
-            fetch: async (resource, options = {}) => {
-                if (sessionToken) {
-                    options.headers = {
-                        ...options.headers,
-                        'Authorization': `Bearer ${sessionToken}`,
-                    };
-                }
-                if (this.cookies) {
-                    options.headers = {
-                        ...options.headers,
-                        'Cookie': this.cookies, // Add cookies to the request
-                    };
-                }
-                return axios.post(resource, options.data, options);
-            },
-            getAnonymousToken: () => anonymousToken,
-            getSessionToken: () => sessionToken,
-        };
-    }
+    return {
+        setAnonymousToken: (value) => {
+            anonymousToken = value;
+        },
+        setSessionToken: (value) => {
+            sessionToken = value;
+        },
+        setCookies: (value) => {
+            cookies = value; // Save cookies
+        },
+        fetch: async (resource, options = {}) => {
+            if (sessionToken) {
+                options.headers = {
+                    ...options.headers,
+                    'Authorization': `Bearer ${sessionToken}`,
+                };
+            }
+            if (cookies) {
+                options.headers = {
+                    ...options.headers,
+                    'Cookie': cookies, // Add cookies to the request
+                };
+            }
+            return axios.post(resource, options.data, options);
+        },
+        getAnonymousToken: () => anonymousToken,
+        getSessionToken: () => sessionToken,
+        getCookies: () => cookies, // Add this getter
+    };
+}
+
 
     async handleMessage(from, messageBody, intent) {
         // Store the last intent
@@ -145,7 +148,8 @@ class StateMachine {
                     // Extract cookies from the response headers
                     const setCookie = finalLoginResponse.headers['set-cookie'];
                     if (setCookie) {
-                        this.auth.setCookies(setCookie.join('; ')); // Store cookies
+                        this.auth.setCookies(setCookie); // Store cookies
+                        console.log("set cookie is", this.auth.getCookies());
                     }
 
                     if (finalLoginResponse.data.status.result === "SUCCESSFUL") {
@@ -197,7 +201,7 @@ class StateMachine {
                     'X-Token-Type': 'JWT',
                     'X-Target-Unit': 'OBDX_BU',
                     'Content-Type': 'application/json',
-                    'Cookie': this.auth.cookies // Include cookies in the request
+                    'Cookie': this.auth.getCookies() // Include cookies in the request
                 }
             });
 
