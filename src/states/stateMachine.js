@@ -1,6 +1,5 @@
 const axios = require("axios");
 const config = require("../config/config");
-const dns = require('dns');  // Ensure this is at the top
 require('dotenv').config();
 
 const states = {
@@ -15,8 +14,34 @@ class StateMachine {
         this.state = states.INITIAL;
         this.mobileNumber = '';
         this.interactionId = '';
-        this.token = '';
         this.registrationId = ''; // Store registrationId
+        this.auth = this.createAuthModule(); // Create an instance of the auth module
+    }
+
+    // Auth module to manage token securely
+    createAuthModule() {
+        let anonymousToken = '';
+        let sessionToken = '';
+
+        return {
+            setAnonymousToken: (value) => {
+                anonymousToken = value;
+            },
+            setSessionToken: (value) => {
+                sessionToken = value;
+            },
+            fetch: async (resource, options = {}) => {
+                if (sessionToken) {
+                    options.headers = {
+                        ...options.headers,
+                        'Authorization': `Bearer ${sessionToken}`,
+                    };
+                }
+                return axios.post(resource, options.data, options);
+            },
+            getAnonymousToken: () => anonymousToken,
+            getSessionToken: () => sessionToken,
+        };
     }
 
     async handleMessage(from, messageBody, intent) {
@@ -46,32 +71,29 @@ class StateMachine {
         }
         return "I can help you with balance, transactions, bill payments, and money transfers. Please enter your request.";
     }
+
     async verifyOTP(otp) {
         try {
-        dns.lookup('rnoex-148-87-23-5.a.free.pinggy.link', (err, address) => {
-            if (err) {
-                console.error('DNS lookup failed:', err);
-            } else {
-                console.log('Resolved address:', address);
-            }
-        });
-            console.log("First API call to get an anonymous token")
+            console.log("First API call to get an anonymous token");
             const tokenResponse = await axios.post('https://rnoex-148-87-23-5.a.free.pinggy.link/digx-infra/login/v1/anonymousToken', {}, {
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-authentication-type': 'JWT'                }
+                    'x-authentication-type': 'JWT'
+                }
             });
 
             if (tokenResponse.data.status.result === "SUCCESSFUL") {
-                console.log("First API call to get an anonymous token is success")
+                console.log("First API call to get an anonymous token is success");
                 this.interactionId = tokenResponse.data.interactionId;
-                this.token = tokenResponse.data.token;
+                this.auth.setAnonymousToken(tokenResponse.data.token); // Set the anonymous token
+
                 // Second API call to verify the OTP
                 console.log('otp', otp);
-                console.log('mobileno', this.mobileNumber); 
-                console.log('token',this.token);
-                console.log('tokenResponse',tokenResponse);
-                console.log('interactionId', tokenResponse.data.interactionId)
+                console.log('mobileno', this.mobileNumber);
+                console.log('token', this.auth.getAnonymousToken());
+                console.log('tokenResponse', tokenResponse);
+                console.log('interactionId', tokenResponse.data.interactionId);
+
                 const otpResponse = await axios.post('https://rnoex-148-87-23-5.a.free.pinggy.link/digx-infra/login/v1/login?locale=en', {
                     mobileNumber: this.mobileNumber
                 }, {
@@ -79,7 +101,7 @@ class StateMachine {
                         'Content-Type': 'application/json',
                         'x-authentication-type': 'CHATBOT',
                         'TOKEN_ID': otp,
-                        'Authorization': `Bearer ${this.token}`,
+                        'Authorization': `Bearer ${this.auth.getAnonymousToken()}`,
                         'X-Token-Type': 'JWT',
                         'X-Target-Unit': 'OBDX_BU',
                         'Cookie': 'secretKey=i0gWjmcjtQlaXniQ7yA3sObMhIY1Z3Ap'
@@ -87,10 +109,9 @@ class StateMachine {
                 });
 
                 if (otpResponse.data.status.result === "SUCCESSFUL") {
-                                console.log("Second login call");
-                                console.log("otpResponse",otpResponse);
-                                console.log("registrationId",otpResponse.data.registrationId);
-
+                    console.log("Second login call");
+                    console.log("otpResponse", otpResponse);
+                    console.log("registrationId", otpResponse.data.registrationId);
 
                     this.registrationId = otpResponse.data.registrationId; // Store registrationId
                     
@@ -103,17 +124,19 @@ class StateMachine {
                             'Content-Type': 'application/json',
                             'x-authentication-type': 'CHATBOT',
                             'TOKEN_ID': otp,
-                            'Authorization': `Bearer ${this.token}`,
+                            'Authorization': `Bearer ${this.auth.getAnonymousToken()}`,
                             'X-Token-Type': 'JWT',
                             'X-Target-Unit': 'OBDX_BU',
                             'Cookie': 'secretKey=i0gWjmcjtQlaXniQ7yA3sObMhIY1Z3Ap'
                         }
                     });
+
                     console.log("finalLoginResponse:", finalLoginResponse);
                     console.log(finalLoginResponse.data.status.result);
                     if (finalLoginResponse.data.status.result === "SUCCESSFUL") {
+                        this.auth.setSessionToken(finalLoginResponse.data.token); // Save session token
                         this.state = states.LOGGED_IN; // Transition to logged-in state
-                        console.log("login now success");
+                        console.log("login now success and token saved successfully");
                         return "You have successfully verified your OTP and logged in. You can now access your account.";
                     } else {
                         console.error("Final login failed:", finalLoginResponse.data); // Log the failure response
