@@ -1,5 +1,6 @@
 const axios = require("axios");
 const config = require("../config/config");
+const dns = require('dns');  // Ensure this is at the top
 require('dotenv').config();
 
 const states = {
