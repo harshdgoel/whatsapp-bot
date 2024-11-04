@@ -46,8 +46,18 @@ class StateMachine {
         return "I can help you with balance, transactions, bill payments, and money transfers. Please enter your request.";
     }
 
+    const dns = require('dns');
+
     async verifyOTP(otp) {
         try {
+
+        dns.lookup('ofss-mum-3483.snbomprshared1.gbucdsint02bom.oraclevcn.com', (err, address) => {
+            if (err) {
+                console.error('DNS lookup failed:', err);
+            } else {
+                console.log('Resolved address:', address);
+            }
+        });
             console.log("First API call to get an anonymous token")
             const tokenResponse = await axios.post('https://ofss-mum-3483.snbomprshared1.gbucdsint02bom.oraclevcn.com/digx-infra/login/v1/anonymousToken', {}, {
                 headers: {
