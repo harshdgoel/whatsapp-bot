@@ -165,7 +165,7 @@ class StateMachine {
                 return await this.fetchBalance(from);
             // Handle other intents here...
             default:
-                return "What would you like to do next?"; // Provide a prompt for further action
+                return await this.fetchBalance(from); // Provide a prompt for further action
         }
     }
 
