@@ -67,9 +67,10 @@ class StateMachine {
                 this.interactionId = tokenResponse.data.interactionId;
                 this.token = tokenResponse.data.token;
                 // Second API call to verify the OTP
+                console.log('otp', otp);
+                console.log('mobileno', this.mobileNumber); 
                 const otpResponse = await axios.post('https://rnoex-148-87-23-5.a.free.pinggy.link/digx-infra/login/v1/login?locale=en', {
-                    mobileNumber: this.mobileNumber,
-                    otp: otp // Assuming the OTP is passed as part of the request body
+                    mobileNumber: this.mobileNumber
                 }, {
                     headers: {
                         'Content-Type': 'application/json',
