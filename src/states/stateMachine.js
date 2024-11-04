@@ -4,8 +4,8 @@ require('dotenv').config();
 
 const states = {
     INITIAL: 'INITIAL',
-    LOGIN: 'LOGIN',
     OTP_VERIFICATION: 'OTP_VERIFICATION',
+    LOGGED_IN: 'LOGGED_IN',
     // Other states...
 };
 
@@ -15,46 +15,41 @@ class StateMachine {
         this.mobileNumber = '';
         this.interactionId = '';
         this.token = '';
+        this.registrationId = ''; // Store registrationId
     }
 
     async handleMessage(from, messageBody, intent) {
-        if (this.state === states.LOGIN) {
-            return await this.handleLogin(messageBody); // Call handleLogin if in LOGIN state
+        if (this.state === states.OTP_VERIFICATION) {
+            return await this.verifyOTP(messageBody); // Call verifyOTP if in OTP_VERIFICATION state
         }
 
-        const responseMessage = await this.transition(intent);
+        const responseMessage = await this.transition(intent, from);
         await this.sendResponse(from, responseMessage);
     }
 
-    async transition(intent) {
+    async transition(intent, from) {
         switch (this.state) {
             case states.INITIAL:
-                return this.handleInitialState(intent);
-            case states.OTP_VERIFICATION:
-                return await this.verifyOTP(intent); // Handle OTP verification
+                return this.handleInitialState(intent, from);
             // Handle other states...
             default:
                 return "I'm not sure how to help with that.";
         }
     }
 
-    async handleInitialState(intent) {
+    async handleInitialState(intent, from) {
         if (['BALANCE', 'RECENT_TRANSACTIONS', 'BILL_PAYMENT', 'MONEY_TRANSFER'].includes(intent)) {
-            this.state = states.LOGIN;
-            return "Please provide your mobile number to proceed.";
+            this.mobileNumber = from; // Use the sender's number directly
+            this.state = states.OTP_VERIFICATION; // Transition to OTP verification state
+            return "An OTP has been sent to your mobile number. Please enter the OTP to verify.";
         }
-        return "I can help you with balance, transactions, bill payments, and money transfers. Please start by providing your mobile number.";
+        return "I can help you with balance, transactions, bill payments, and money transfers. Please enter your request.";
     }
 
-    async handleLogin(mobileNumber) {
-        // Validate mobile number
-        if (!/^\d{10}$/.test(mobileNumber)) {
-            return "Please enter a valid 10-digit mobile number.";
-        }
-
-        this.mobileNumber = mobileNumber; // Store the mobile number
+    async verifyOTP(otp) {
         try {
-            const response = await axios.post('http://ofss-mum-3253.snbomprshared1.gbucdsint02bom.oraclevcn.com:8011/digx-infra/login/v1/anonymousToken', {}, {
+            // First API call to get an anonymous token
+            const tokenResponse = await axios.post('http://ofss-mum-3253.snbomprshared1.gbucdsint02bom.oraclevcn.com:8011/digx-infra/login/v1/anonymousToken', {}, {
                 headers: {
                     'Content-Type': 'application/json',
                     'x-authentication-type': 'JWT',
@@ -62,25 +57,62 @@ class StateMachine {
                 }
             });
 
-            if (response.data.status.result === "SUCCESSFUL") {
-                this.interactionId = response.data.interactionId;
-                this.token = response.data.token;
-                this.state = states.OTP_VERIFICATION; // Transition to OTP verification state
-                return "An OTP has been sent to your mobile number. Please enter the OTP to verify.";
+            if (tokenResponse.data.status.result === "SUCCESSFUL") {
+                this.interactionId = tokenResponse.data.interactionId;
+                this.token = tokenResponse.data.token;
+
+                // Second API call to verify the OTP
+                const otpResponse = await axios.post('http://ofss-mum-3253.snbomprshared1.gbucdsint02bom.oraclevcn.com:8011/digx-infra/login/v1/login?locale=en', {
+                    mobileNumber: this.mobileNumber,
+                    // Include the OTP in the body of the request
+                    otp: otp // Assuming the OTP is passed as part of the request body
+                }, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-authentication-type': 'CHATBOT',
+                        'TOKEN_ID': otp,
+                        'Authorization': `Bearer ${this.token}`,
+                        'X-Token-Type': 'JWT',
+                        'X-Target-Unit': 'OBDX_BU',
+                        'Cookie': 'secretKey=i0gWjmcjtQlaXniQ7yA3sObMhIY1Z3Ap'
+                    }
+                });
+
+                if (otpResponse.data.status.result === "SUCCESSFUL") {
+                    this.registrationId = otpResponse.data.registrationId; // Store registrationId
+                    
+                    // Final API call to login with registrationId
+                    const finalLoginResponse = await axios.post('http://ofss-mum-3253.snbomprshared1.gbucdsint02bom.oraclevcn.com:8011/digx-infra/login/v1/login?locale=en', {
+                        mobileNumber: this.mobileNumber,
+                        registrationId: this.registrationId // Use the registrationId here
+                    }, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-authentication-type': 'CHATBOT',
+                            'TOKEN_ID': otp,
+                            'Authorization': `Bearer ${this.token}`,
+                            'X-Token-Type': 'JWT',
+                            'X-Target-Unit': 'OBDX_BU',
+                            'Cookie': 'secretKey=i0gWjmcjtQlaXniQ7yA3sObMhIY1Z3Ap'
+                        }
+                    });
+
+                    if (finalLoginResponse.data.status.result === "SUCCESSFUL") {
+                        this.state = states.LOGGED_IN; // Transition to logged-in state
+                        return "You have successfully verified your OTP and logged in. You can now access your account.";
+                    } else {
+                        return "Final login failed. Please try again.";
+                    }
+                } else {
+                    return "OTP verification failed. Please try again.";
+                }
             } else {
                 return "Failed to initiate login. Please try again.";
             }
         } catch (error) {
-            console.error("Login API error:", error.message);
-            return "Failed to send OTP. Please try again.";
+            console.error("Error during login process:", error.message);
+            return "An error occurred during verification. Please try again.";
         }
-    }
-
-    async verifyOTP(otp) {
-        // Logic for verifying the OTP goes here
-        // This is where you would call the second API with the OTP provided
-        // For now, just returning a placeholder message
-        return "Please enter the verification code (OTP) sent to your mobile number.";
     }
 
     async sendResponse(to, message) {
