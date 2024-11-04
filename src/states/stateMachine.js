@@ -39,7 +39,7 @@ class StateMachine {
 
     async handleInitialState(intent, from) {
         if (['BALANCE', 'RECENT_TRANSACTIONS', 'BILL_PAYMENT', 'MONEY_TRANSFER'].includes(intent)) {
-            this.mobileNumber = from; // Use the sender's number directly
+            this.mobileNumber = '919920384587'; // Use the sender's number directly
             this.state = states.OTP_VERIFICATION; // Transition to OTP verification state
             return "An OTP has been sent to your mobile number. Please enter the OTP to verify.";
         }
@@ -49,7 +49,7 @@ class StateMachine {
     async verifyOTP(otp) {
         try {
             console.log("First API call to get an anonymous token")
-            const tokenResponse = await axios.post('http://ofss-mum-3253.snbomprshared1.gbucdsint02bom.oraclevcn.com:8011/digx-infra/login/v1/anonymousToken', {}, {
+            const tokenResponse = await axios.post('https://ofss-mum-3483.snbomprshared1.gbucdsint02bom.oraclevcn.com/digx-infra/login/v1/anonymousToken', {}, {
                 headers: {
                     'Content-Type': 'application/json',
                     'x-authentication-type': 'JWT'                }
@@ -60,7 +60,7 @@ class StateMachine {
                 this.interactionId = tokenResponse.data.interactionId;
                 this.token = tokenResponse.data.token;
                 // Second API call to verify the OTP
-                const otpResponse = await axios.post('http://ofss-mum-3253.snbomprshared1.gbucdsint02bom.oraclevcn.com:8011/digx-infra/login/v1/login?locale=en', {
+                const otpResponse = await axios.post('https://ofss-mum-3483.snbomprshared1.gbucdsint02bom.oraclevcn.com/digx-infra/login/v1/login?locale=en', {
                     mobileNumber: this.mobileNumber,
                     otp: otp // Assuming the OTP is passed as part of the request body
                 }, {
@@ -80,7 +80,7 @@ class StateMachine {
                     this.registrationId = otpResponse.data.registrationId; // Store registrationId
                     
                     // Final API call to login with registrationId
-                    const finalLoginResponse = await axios.post('http://ofss-mum-3253.snbomprshared1.gbucdsint02bom.oraclevcn.com:8011/digx-infra/login/v1/login?locale=en', {
+                    const finalLoginResponse = await axios.post('https://ofss-mum-3483.snbomprshared1.gbucdsint02bom.oraclevcn.com/digx-infra/login/v1/login?locale=en', {
                         mobileNumber: this.mobileNumber,
                         registrationId: this.registrationId // Use the registrationId here
                     }, {
