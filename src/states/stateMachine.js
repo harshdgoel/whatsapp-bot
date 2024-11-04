@@ -48,7 +48,7 @@ class StateMachine {
 
     async verifyOTP(otp) {
         try {
-            // First API call to get an anonymous token
+            console.log("First API call to get an anonymous token")
             const tokenResponse = await axios.post('http://ofss-mum-3253.snbomprshared1.gbucdsint02bom.oraclevcn.com:8011/digx-infra/login/v1/anonymousToken', {}, {
                 headers: {
                     'Content-Type': 'application/json',
@@ -58,13 +58,12 @@ class StateMachine {
             });
 
             if (tokenResponse.data.status.result === "SUCCESSFUL") {
+                console.log("First API call to get an anonymous token is success")
                 this.interactionId = tokenResponse.data.interactionId;
                 this.token = tokenResponse.data.token;
-
                 // Second API call to verify the OTP
                 const otpResponse = await axios.post('http://ofss-mum-3253.snbomprshared1.gbucdsint02bom.oraclevcn.com:8011/digx-infra/login/v1/login?locale=en', {
                     mobileNumber: this.mobileNumber,
-                    // Include the OTP in the body of the request
                     otp: otp // Assuming the OTP is passed as part of the request body
                 }, {
                     headers: {
@@ -79,6 +78,7 @@ class StateMachine {
                 });
 
                 if (otpResponse.data.status.result === "SUCCESSFUL") {
+                                console.log("Second login call")
                     this.registrationId = otpResponse.data.registrationId; // Store registrationId
                     
                     // Final API call to login with registrationId
@@ -101,16 +101,19 @@ class StateMachine {
                         this.state = states.LOGGED_IN; // Transition to logged-in state
                         return "You have successfully verified your OTP and logged in. You can now access your account.";
                     } else {
+                        console.error("Final login failed:", finalLoginResponse.data); // Log the failure response
                         return "Final login failed. Please try again.";
                     }
                 } else {
+                    console.error("OTP verification failed:", otpResponse.data); // Log the OTP failure response
                     return "OTP verification failed. Please try again.";
                 }
             } else {
+                console.error("Failed to initiate login:", tokenResponse.data); // Log the token initiation failure
                 return "Failed to initiate login. Please try again.";
             }
         } catch (error) {
-            console.error("Error during login process:", error.message);
+            console.error("Error during login process:", error.message, error.stack); // Enhanced logging
             return "An error occurred during verification. Please try again.";
         }
     }
