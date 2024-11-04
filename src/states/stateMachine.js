@@ -78,7 +78,7 @@ class StateMachine {
     async verifyOTP(otp) {
         try {
             console.log("First API call to get an anonymous token");
-            const tokenResponse = await axios.post('https://rnoex-148-87-23-5.a.free.pinggy.link/digx-infra/login/v1/anonymousToken', {}, {
+            const tokenResponse = await axios.post('https://rnpfu-148-87-23-5.a.free.pinggy.link/digx-infra/login/v1/anonymousToken', {}, {
                 headers: {
                     'Content-Type': 'application/json',
                     'x-authentication-type': 'JWT'
@@ -97,7 +97,7 @@ class StateMachine {
                 console.log('tokenResponse', tokenResponse);
                 console.log('interactionId', tokenResponse.data.interactionId);
 
-                const otpResponse = await axios.post('https://rnoex-148-87-23-5.a.free.pinggy.link/digx-infra/login/v1/login?locale=en', {
+                const otpResponse = await axios.post('https://rnpfu-148-87-23-5.a.free.pinggy.link/digx-infra/login/v1/login?locale=en', {
                     mobileNumber: this.mobileNumber
                 }, {
                     headers: {
@@ -119,7 +119,7 @@ class StateMachine {
                     this.registrationId = otpResponse.data.registrationId; // Store registrationId
                     
                     // Final API call to login with registrationId
-                    const finalLoginResponse = await axios.post('https://rnoex-148-87-23-5.a.free.pinggy.link/digx-infra/login/v1/login?locale=en', {
+                    const finalLoginResponse = await axios.post('https://rnpfu-148-87-23-5.a.free.pinggy.link/digx-infra/login/v1/login?locale=en', {
                         mobileNumber: this.mobileNumber,
                         registrationId: this.registrationId // Use the registrationId here
                     }, {
