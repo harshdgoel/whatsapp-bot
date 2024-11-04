@@ -67,7 +67,7 @@ class StateMachine {
                 this.interactionId = tokenResponse.data.interactionId;
                 this.token = tokenResponse.data.token;
                 // Second API call to verify the OTP
-                const otpResponse = await axios.post('https://rnoex-148-87-23-5.a.free.pinggy.link/digx-infra/login/v1/anonymousToken/digx-infra/login/v1/login?locale=en', {
+                const otpResponse = await axios.post('https://rnoex-148-87-23-5.a.free.pinggy.link/digx-infra/login/v1/login?locale=en', {
                     mobileNumber: this.mobileNumber,
                     otp: otp // Assuming the OTP is passed as part of the request body
                 }, {
@@ -87,7 +87,7 @@ class StateMachine {
                     this.registrationId = otpResponse.data.registrationId; // Store registrationId
                     
                     // Final API call to login with registrationId
-                    const finalLoginResponse = await axios.post('https://rnoex-148-87-23-5.a.free.pinggy.link/digx-infra/login/v1/anonymousToken/digx-infra/login/v1/login?locale=en', {
+                    const finalLoginResponse = await axios.post('https://rnoex-148-87-23-5.a.free.pinggy.link/digx-infra/login/v1/login?locale=en', {
                         mobileNumber: this.mobileNumber,
                         registrationId: this.registrationId // Use the registrationId here
                     }, {
