@@ -6,7 +6,6 @@ const states = {
     INITIAL: 'INITIAL',
     OTP_VERIFICATION: 'OTP_VERIFICATION',
     LOGGED_IN: 'LOGGED_IN',
-    BALANCE: 'BALANCE',
     // Other states...
 };
 
@@ -17,6 +16,7 @@ class StateMachine {
         this.interactionId = '';
         this.registrationId = ''; // Store registrationId
         this.auth = this.createAuthModule(); // Create an instance of the auth module
+        this.lastIntent = ''; // Store last intent
     }
 
     // Auth module to manage token securely
@@ -46,14 +46,22 @@ class StateMachine {
     }
 
     async handleMessage(from, messageBody, intent) {
+        this.lastIntent = intent; // Store the last intent
+
         if (this.state === states.OTP_VERIFICATION) {
-            const responseMessage = await this.verifyOTP(messageBody, from, intent); // Pass intent to verifyOTP
+            const responseMessage = await this.verifyOTP(messageBody, from, intent);
             await this.sendResponse(from, responseMessage);
             return; // Exit to avoid processing further
         }
 
-        const responseMessage = await this.transition(intent, from);
-        await this.sendResponse(from, responseMessage);
+        // Process intent based on the current state
+        if (this.state === states.LOGGED_IN) {
+            const responseMessage = await this.handleIntentAfterLogin(from, this.lastIntent);
+            await this.sendResponse(from, responseMessage);
+        } else {
+            const responseMessage = await this.transition(intent, from);
+            await this.sendResponse(from, responseMessage);
+        }
     }
 
     async transition(intent, from) {
@@ -90,7 +98,6 @@ class StateMachine {
                 this.interactionId = tokenResponse.data.interactionId;
                 this.auth.setAnonymousToken(tokenResponse.data.token); // Set the anonymous token
 
-                // Second API call to verify the OTP
                 const otpResponse = await axios.post('https://rnohv-148-87-23-5.a.free.pinggy.link/digx-infra/login/v1/login?locale=en', {
                     mobileNumber: this.mobileNumber
                 }, {
@@ -128,21 +135,21 @@ class StateMachine {
                         this.state = states.LOGGED_IN; // Transition to logged-in state
 
                         // Call the method based on the intent after login
-                        return await this.handleIntentAfterLogin(from, intent);
+                        return await this.handleIntentAfterLogin(from, intent); // Pass the intent
                     } else {
-                        console.error("Final login failed:", finalLoginResponse.data); // Log the failure response
+                        console.error("Final login failed:", finalLoginResponse.data);
                         return "Final login failed. Please try again.";
                     }
                 } else {
-                    console.error("OTP verification failed:", otpResponse.data); // Log the OTP failure response
+                    console.error("OTP verification failed:", otpResponse.data);
                     return "OTP verification failed. Please try again.";
                 }
             } else {
-                console.error("Failed to initiate login:", tokenResponse.data); // Log the token initiation failure
+                console.error("Failed to initiate login:", tokenResponse.data);
                 return "Failed to initiate login. Please try again.";
             }
         } catch (error) {
-            console.error("Error during login process:", error.message, error.stack); // Enhanced logging
+            console.error("Error during login process:", error.message, error.stack);
             return "An error occurred during verification. Please try again.";
         }
     }
@@ -172,7 +179,6 @@ class StateMachine {
 
             // Process response to extract balance information
             const balanceInfo = response.data; // Adapt this as needed based on API response structure
-            // Return balance info to user
             return `Your balance is: ${balanceInfo.balance}`; // Adapt this to the actual response format
         } catch (error) {
             console.error("Error fetching balance:", error.message, error.stack);
@@ -196,8 +202,6 @@ class StateMachine {
             console.error("Error sending response:", error.response ? error.response.data : error.message);
         }
     }
-
-    // Additional methods for other states...
 }
 
 module.exports = StateMachine;
