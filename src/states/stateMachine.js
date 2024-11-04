@@ -18,6 +18,7 @@ class StateMachine {
         this.registrationId = ''; // Store registrationId
         this.auth = this.createAuthModule(); // Create an instance of the auth module
         this.lastIntent = ''; // Store last intent
+        this.cookies = ''; // To store cookies
     }
 
     // Auth module to manage token securely
@@ -32,11 +33,20 @@ class StateMachine {
             setSessionToken: (value) => {
                 sessionToken = value;
             },
+            setCookies: (value) => {
+                this.cookies = value; // Save cookies
+            },
             fetch: async (resource, options = {}) => {
                 if (sessionToken) {
                     options.headers = {
                         ...options.headers,
                         'Authorization': `Bearer ${sessionToken}`,
+                    };
+                }
+                if (this.cookies) {
+                    options.headers = {
+                        ...options.headers,
+                        'Cookie': this.cookies, // Add cookies to the request
                     };
                 }
                 return axios.post(resource, options.data, options);
@@ -87,7 +97,7 @@ class StateMachine {
     async verifyOTP(otp, from, intent) {
         try {
             console.log("First API call to get an anonymous token");
-            const tokenResponse = await axios.post('https://rnohv-148-87-23-5.a.free.pinggy.link/digx-infra/login/v1/anonymousToken', {}, {
+            const tokenResponse = await axios.post('https://rncne-148-87-23-5.a.free.pinggy.link/digx-infra/login/v1/anonymousToken', {}, {
                 headers: {
                     'Content-Type': 'application/json',
                     'x-authentication-type': 'JWT'
@@ -99,7 +109,7 @@ class StateMachine {
                 this.interactionId = tokenResponse.data.interactionId;
                 this.auth.setAnonymousToken(tokenResponse.data.token); // Set the anonymous token
 
-                const otpResponse = await axios.post('https://rnohv-148-87-23-5.a.free.pinggy.link/digx-infra/login/v1/login?locale=en', {
+                const otpResponse = await axios.post('https://rncne-148-87-23-5.a.free.pinggy.link/digx-infra/login/v1/login?locale=en', {
                     mobileNumber: this.mobileNumber
                 }, {
                     headers: {
@@ -109,13 +119,12 @@ class StateMachine {
                         'Authorization': `Bearer ${this.auth.getAnonymousToken()}`,
                         'X-Token-Type': 'JWT',
                         'X-Target-Unit': 'OBDX_BU',
-                        'Cookie': 'secretKey=i0gWjmcjtQlaXniQ7yA3sObMhIY1Z3Ap'
                     }
                 });
 
                 if (otpResponse.data.status.result === "SUCCESSFUL") {
                     this.registrationId = otpResponse.data.registrationId; // Store registrationId
-                    const finalLoginResponse = await axios.post('https://rnohv-148-87-23-5.a.free.pinggy.link/digx-infra/login/v1/login?locale=en', {
+                    const finalLoginResponse = await axios.post('https://rncne-148-87-23-5.a.free.pinggy.link/digx-infra/login/v1/login?locale=en', {
                         mobileNumber: this.mobileNumber,
                         registrationId: this.registrationId // Use the registrationId here
                     }, {
@@ -126,12 +135,17 @@ class StateMachine {
                             'Authorization': `Bearer ${this.auth.getAnonymousToken()}`,
                             'X-Token-Type': 'JWT',
                             'X-Target-Unit': 'OBDX_BU',
-                            'Cookie': 'secretKey=i0gWjmcjtQlaXniQ7yA3sObMhIY1Z3Ap'
                         }
                     });
 
+                    // Extract cookies from the response headers
+                    const setCookie = finalLoginResponse.headers['set-cookie'];
+                    if (setCookie) {
+                        this.auth.setCookies(setCookie.join('; ')); // Store cookies
+                    }
+
                     if (finalLoginResponse.data.status.result === "SUCCESSFUL") {
-                        console.log("login success");
+                        console.log("Login success");
                         this.auth.setSessionToken(finalLoginResponse.data.token); // Save session token
                         this.state = states.BALANCE; // Transition to BALANCE state
 
@@ -156,7 +170,7 @@ class StateMachine {
     }
 
     async handleIntentAfterLogin(from) {
-        console.log("entering handleIntentAfterLogin");
+        console.log("Entering handleIntentAfterLogin");
 
         // Now we transition to the appropriate state based on the lastIntent
         switch (this.lastIntent) {
@@ -170,19 +184,23 @@ class StateMachine {
     }
 
     async fetchBalance(from) {
-        console.log("entering fetch balance");
+        console.log("Entering fetchBalance");
+        console.log("cookie:",this.auth.cookies);
         try {
-            const response = await axios.get('https://rnohv-148-87-23-5.a.free.pinggy.link/digx-common/dda/v1/demandDeposit?accountType=CURRENT%2CSAVING&status=ACTIVE&status=DORMANT&status=CLOSED&expand=DEBITCARDS&locale=en', {
+            const response = await axios.get('https://rncne-148-87-23-5.a.free.pinggy.link/digx-common/dda/v1/demandDeposit?accountType=CURRENT%2CSAVING&status=ACTIVE&status=DORMANT&status=CLOSED&expand=DEBITCARDS&locale=en', {
                 headers: {
                     'Authorization': `Bearer ${this.auth.getSessionToken()}`,
                     'X-Token-Type': 'JWT',
                     'X-Target-Unit': 'OBDX_BU',
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Cookie': this.auth.cookies // Include cookies in the request
                 }
             });
 
             // Process response to extract balance information
+
             const balanceInfo = response.data; // Adapt this as needed based on API response structure
+            console.log("balance api success",balanceInfo);
             return `Your balance is: ${balanceInfo.balance}`; // Adapt this to the actual response format
         } catch (error) {
             console.error("Error fetching balance:", error.message, error.stack);
