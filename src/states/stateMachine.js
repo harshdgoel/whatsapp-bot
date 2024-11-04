@@ -6,7 +6,7 @@ const states = {
     INITIAL: 'INITIAL',
     OTP_VERIFICATION: 'OTP_VERIFICATION',
     LOGGED_IN: 'LOGGED_IN',
-    FETCH_BALANCE: 'FETCH_BALANCE',
+    BALANCE: 'BALANCE',
     // Other states...
 };
 
@@ -17,9 +17,9 @@ class StateMachine {
         this.interactionId = '';
         this.registrationId = ''; // Store registrationId
         this.auth = this.createAuthModule(); // Create an instance of the auth module
-        this.intent = ''; // Store the user's intent
     }
 
+    // Auth module to manage token securely
     createAuthModule() {
         let anonymousToken = '';
         let sessionToken = '';
@@ -47,9 +47,8 @@ class StateMachine {
 
     async handleMessage(from, messageBody, intent) {
         if (this.state === states.OTP_VERIFICATION) {
-            const responseMessage = await this.verifyOTP(messageBody); // Call verifyOTP if in OTP_VERIFICATION state
-            console.log("Message to send:", responseMessage); // Log the message to be sent
-            await this.sendResponse(from, responseMessage); // Send the response to WhatsApp
+            const responseMessage = await this.verifyOTP(messageBody, from, intent); // Pass intent to verifyOTP
+            await this.sendResponse(from, responseMessage);
             return; // Exit to avoid processing further
         }
 
@@ -61,8 +60,6 @@ class StateMachine {
         switch (this.state) {
             case states.INITIAL:
                 return this.handleInitialState(intent, from);
-            case states.LOGGED_IN:
-                return this.handlePostLoginIntent(intent, from);
             // Handle other states...
             default:
                 return "I'm not sure how to help with that.";
@@ -73,31 +70,15 @@ class StateMachine {
         if (['BALANCE', 'RECENT_TRANSACTIONS', 'BILL_PAYMENT', 'MONEY_TRANSFER'].includes(intent)) {
             this.mobileNumber = '916378582419'; // Use the sender's number directly
             this.state = states.OTP_VERIFICATION; // Transition to OTP verification state
-            this.intent = intent; // Save the user's intent
             return "An OTP has been sent to your mobile number. Please enter the OTP to verify.";
         }
         return "I can help you with balance, transactions, bill payments, and money transfers. Please enter your request.";
     }
 
-    async handlePostLoginIntent(intent, from) {
-        switch (intent) {
-            case 'BALANCE':
-                return await this.fetchBalance(from);
-            case 'RECENT_TRANSACTIONS':
-                return await this.fetchRecentTransactions(from);
-            case 'BILL_PAYMENT':
-                return await this.processBillPayment(from);
-            case 'MONEY_TRANSFER':
-                return await this.processMoneyTransfer(from);
-            default:
-                return "I'm not sure how to help with that.";
-        }
-    }
-
-    async verifyOTP(otp) {
+    async verifyOTP(otp, from, intent) {
         try {
             console.log("First API call to get an anonymous token");
-            const tokenResponse = await axios.post('https://rnpfu-148-87-23-5.a.free.pinggy.link/digx-infra/login/v1/anonymousToken', {}, {
+            const tokenResponse = await axios.post('https://rnohv-148-87-23-5.a.free.pinggy.link/digx-infra/login/v1/anonymousToken', {}, {
                 headers: {
                     'Content-Type': 'application/json',
                     'x-authentication-type': 'JWT'
@@ -110,7 +91,7 @@ class StateMachine {
                 this.auth.setAnonymousToken(tokenResponse.data.token); // Set the anonymous token
 
                 // Second API call to verify the OTP
-                const otpResponse = await axios.post('https://rnpfu-148-87-23-5.a.free.pinggy.link/digx-infra/login/v1/login?locale=en', {
+                const otpResponse = await axios.post('https://rnohv-148-87-23-5.a.free.pinggy.link/digx-infra/login/v1/login?locale=en', {
                     mobileNumber: this.mobileNumber
                 }, {
                     headers: {
@@ -125,11 +106,8 @@ class StateMachine {
                 });
 
                 if (otpResponse.data.status.result === "SUCCESSFUL") {
-                    console.log("Second login call successful");
                     this.registrationId = otpResponse.data.registrationId; // Store registrationId
-                    
-                    // Final API call to login with registrationId
-                    const finalLoginResponse = await axios.post('https://rnpfu-148-87-23-5.a.free.pinggy.link/digx-infra/login/v1/login?locale=en', {
+                    const finalLoginResponse = await axios.post('https://rnohv-148-87-23-5.a.free.pinggy.link/digx-infra/login/v1/login?locale=en', {
                         mobileNumber: this.mobileNumber,
                         registrationId: this.registrationId // Use the registrationId here
                     }, {
@@ -144,13 +122,13 @@ class StateMachine {
                         }
                     });
 
-                    console.log("finalLoginResponse:", finalLoginResponse);
                     if (finalLoginResponse.data.status.result === "SUCCESSFUL") {
+                        console.log("login success");
                         this.auth.setSessionToken(finalLoginResponse.data.token); // Save session token
                         this.state = states.LOGGED_IN; // Transition to logged-in state
-                        console.log("login now success and token saved successfully");
-                        // After logging in, call the appropriate function based on the intent
-                        return await this.handlePostLoginIntent(this.intent, from);
+
+                        // Call the method based on the intent after login
+                        return await this.handleIntentAfterLogin(from, intent);
                     } else {
                         console.error("Final login failed:", finalLoginResponse.data); // Log the failure response
                         return "Final login failed. Please try again.";
@@ -169,52 +147,37 @@ class StateMachine {
         }
     }
 
-   async fetchBalance(from) {
-    try {
-        const url = 'http://rnpfu-148-87-23-5.a.free.pinggy.link/digx-common/dda/v1/demandDeposit?accountType=CURRENT%2CSAVING&status=ACTIVE&status=DORMANT&status=CLOSED&expand=DEBITCARDS&locale=en';
-
-        const response = await axios.get(url, {
-            headers: {
-                'Authorization': `Bearer ${this.auth.getSessionToken()}`,
-                'X-Token-Type': 'JWT',
-                'X-Target-Unit': 'OBDX_BU',
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-            }
-        });
-
-        // Assuming the response contains the balance information in a certain format
-        const balanceData = response.data; // Adjust this based on the actual response structure
-        console.log("Balance response:", balanceData);
-
-        // Example response message, adjust according to the actual data you receive
-        if (balanceData && balanceData.accounts) {
-            const balanceMessage = balanceData.accounts.map(account => 
-                `Account: ${account.accountNumber}, Balance: ${account.balance}`
-            ).join('\n');
-            return `Here are your balances:\n${balanceMessage}`;
-        } else {
-            return "No balance information available.";
+    async handleIntentAfterLogin(from, intent) {
+        console.log("entering handleIntentAfterLogin");
+        switch (intent) {
+            case 'BALANCE':
+                return await this.fetchBalance(from);
+            // Handle other intents (e.g., 'RECENT_TRANSACTIONS', 'BILL_PAYMENT', 'MONEY_TRANSFER') here
+            default:
+                return "You are logged in. What would you like to do next?";
         }
-    } catch (error) {
-        console.error("Error fetching balance:", error.message, error.stack);
-        return "An error occurred while fetching your balance. Please try again later.";
-    }
-}
-    async fetchRecentTransactions(from) {
-        // Implement the logic to fetch recent transactions here
-        return "Your recent transactions: ..."; // Placeholder response
     }
 
-    async processBillPayment(from) {
-        // Implement the logic for bill payment here
-        return "Bill payment processed successfully."; // Placeholder response
-    }
+    async fetchBalance(from) {
+        console.log("entering fetch balance");
+        try {
+            const response = await axios.get('https://rnohv-148-87-23-5.a.free.pinggy.link/digx-common/dda/v1/demandDeposit?accountType=CURRENT%2CSAVING&status=ACTIVE&status=DORMANT&status=CLOSED&expand=DEBITCARDS&locale=en', {
+                headers: {
+                    'Authorization': `Bearer ${this.auth.getSessionToken()}`,
+                    'X-Token-Type': 'JWT',
+                    'X-Target-Unit': 'OBDX_BU',
+                    'Content-Type': 'application/json'
+                }
+            });
 
-    async processMoneyTransfer(from) {
-        // Implement the logic for money transfer here
-        return "Money transfer completed successfully."; // Placeholder response
+            // Process response to extract balance information
+            const balanceInfo = response.data; // Adapt this as needed based on API response structure
+            // Return balance info to user
+            return `Your balance is: ${balanceInfo.balance}`; // Adapt this to the actual response format
+        } catch (error) {
+            console.error("Error fetching balance:", error.message, error.stack);
+            return "An error occurred while fetching your balance. Please try again.";
+        }
     }
 
     async sendResponse(to, message) {
