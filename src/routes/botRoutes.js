@@ -36,7 +36,7 @@ router.post("/webhook", async (req, res) => {
 
     const { from, text } = messagingEvent;
     const messageBody = text.body;
-
+    console.log('Mobile number:',from)
     // Tokenize the incoming message
     const tokenizer = new WordTokenizer();
     const tokens = tokenizer.tokenize(messageBody.toLowerCase());
