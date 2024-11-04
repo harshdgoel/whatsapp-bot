@@ -46,7 +46,10 @@ class StateMachine {
 
     async handleMessage(from, messageBody, intent) {
         if (this.state === states.OTP_VERIFICATION) {
-            return await this.verifyOTP(messageBody); // Call verifyOTP if in OTP_VERIFICATION state
+ const responseMessage = await this.verifyOTP(messageBody); // Call verifyOTP if in OTP_VERIFICATION state
+        console.log("Message to send:", responseMessage); // Log the message to be sent
+        await this.sendResponse(from, responseMessage); // Send the response to WhatsApp
+        return; // Exit to avoid processing further
         }
 
         const responseMessage = await this.transition(intent, from);
