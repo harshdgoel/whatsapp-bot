@@ -2,7 +2,6 @@ const express = require("express");
 const natural = require("natural");
 const { WordTokenizer } = natural;
 const StateMachine = require('../states/stateMachine');
-const config = require('../config/config');
 const router = express.Router();
 const stateMachine = new StateMachine();
 
@@ -28,7 +27,7 @@ router.post("/webhook", async (req, res) => {
     let messagingEvent;
 
     // Check the structure of the incoming request
-    if (entry && entry[0] && entry[0].changes && entry[0].changes[0] && entry[0].changes[0].value && entry[0].changes[0].value.messages) {
+    if (entry && entry[0] && entry[0].changes && entry[0].changes[0].value && entry[0].changes[0].value.messages) {
         messagingEvent = entry[0].changes[0].value.messages[0];
     } else {
         console.error("Received unexpected structure:", JSON.stringify(entry, null, 2));
