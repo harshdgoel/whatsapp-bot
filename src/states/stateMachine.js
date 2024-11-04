@@ -192,29 +192,40 @@ class StateMachine {
     }
 
     async fetchBalance(from) {
-        console.log("Entering fetchBalance");
-        console.log("cookie:",this.auth.cookies);
-        try {
-            const response = await axios.get('https://rncne-148-87-23-5.a.free.pinggy.link/digx-common/dda/v1/demandDeposit?accountType=CURRENT%2CSAVING&status=ACTIVE&status=DORMANT&status=CLOSED&expand=DEBITCARDS&locale=en', {
-                headers: {
-                    'Authorization': `Bearer ${this.auth.getSessionToken()}`,
-                    'X-Token-Type': 'JWT',
-                    'X-Target-Unit': 'OBDX_BU',
-                    'Content-Type': 'application/json',
-                    'Cookie': this.auth.getCookies() // Include cookies in the request
-                }
-            });
+    console.log("Entering fetchBalance");
+    console.log("cookie:", this.auth.getCookies());
+    try {
+        const response = await axios.get('https://rncne-148-87-23-5.a.free.pinggy.link/digx-common/dda/v1/demandDeposit?accountType=CURRENT%2CSAVING&status=ACTIVE&status=DORMANT&status=CLOSED&expand=DEBITCARDS&locale=en', {
+            headers: {
+                'Authorization': `Bearer ${this.auth.getSessionToken()}`,
+                'X-Token-Type': 'JWT',
+                'X-Target-Unit': 'OBDX_BU',
+                'Content-Type': 'application/json',
+                'Cookie': this.auth.getCookies()
+            }
+        });
 
-            // Process response to extract balance information
+        console.log("balance api success", response.data);
 
-            const balanceInfo = response.data; // Adapt this as needed based on API response structure
-            console.log("balance api success",balanceInfo);
-            return `Your balance is: ${balanceInfo.balance}`; // Adapt this to the actual response format
-        } catch (error) {
-            console.error("Error fetching balance:", error.message, error.stack);
-            return "An error occurred while fetching your balance. Please try again.";
+        // Extract the first account
+        const firstAccount = response.data.accounts[0];
+
+        if (firstAccount) {
+            // Access the account number (displayValue), currency, and balance amount
+            const accountNumber = firstAccount.id.displayValue; // Display value of account ID
+            const currency = firstAccount.currentBalance.currency; // Currency code from current balance
+            const balanceAmount = firstAccount.currentBalance.amount; // Amount from current balance
+
+            // Return the formatted message
+            return `Your balance for account number: ${accountNumber} is ${currency} ${balanceAmount}`;
+        } else {
+            return "No accounts found.";
         }
+    } catch (error) {
+        console.error("Error fetching balance:", error.message, error.stack);
+        return "An error occurred while fetching your balance. Please try again.";
     }
+}
 
     async sendResponse(to, message) {
         const responseMessage = {
