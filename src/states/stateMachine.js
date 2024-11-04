@@ -52,9 +52,7 @@ class StateMachine {
             const tokenResponse = await axios.post('http://ofss-mum-3253.snbomprshared1.gbucdsint02bom.oraclevcn.com:8011/digx-infra/login/v1/anonymousToken', {}, {
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-authentication-type': 'JWT',
-                    'Cookie': 'secretKey=j9r71DRUORO3NX1j0er8egLx0nWAnoke'
-                }
+                    'x-authentication-type': 'JWT'                }
             });
 
             if (tokenResponse.data.status.result === "SUCCESSFUL") {
