@@ -6,6 +6,7 @@ const states = {
     INITIAL: 'INITIAL',
     OTP_VERIFICATION: 'OTP_VERIFICATION',
     LOGGED_IN: 'LOGGED_IN',
+    BALANCE: 'BALANCE',
     // Other states...
 };
 
@@ -46,7 +47,8 @@ class StateMachine {
     }
 
     async handleMessage(from, messageBody, intent) {
-        this.lastIntent = intent; // Store the last intent
+        // Store the last intent
+        this.lastIntent = intent; 
 
         if (this.state === states.OTP_VERIFICATION) {
             const responseMessage = await this.verifyOTP(messageBody, from, intent);
@@ -54,9 +56,9 @@ class StateMachine {
             return; // Exit to avoid processing further
         }
 
-        // Process intent based on the current state
         if (this.state === states.LOGGED_IN) {
-            const responseMessage = await this.handleIntentAfterLogin(from, this.lastIntent);
+            // Handle last intent if already logged in
+            const responseMessage = await this.handleIntentAfterLogin(from);
             await this.sendResponse(from, responseMessage);
         } else {
             const responseMessage = await this.transition(intent, from);
@@ -68,7 +70,6 @@ class StateMachine {
         switch (this.state) {
             case states.INITIAL:
                 return this.handleInitialState(intent, from);
-            // Handle other states...
             default:
                 return "I'm not sure how to help with that.";
         }
@@ -132,10 +133,10 @@ class StateMachine {
                     if (finalLoginResponse.data.status.result === "SUCCESSFUL") {
                         console.log("login success");
                         this.auth.setSessionToken(finalLoginResponse.data.token); // Save session token
-                        this.state = states.LOGGED_IN; // Transition to logged-in state
+                        this.state = states.BALANCE; // Transition to BALANCE state
 
-                        // Call the method based on the intent after login
-                        return await this.handleIntentAfterLogin(from, intent); // Pass the intent
+                        // Call the intent handler after successful login
+                        return await this.handleIntentAfterLogin(from);
                     } else {
                         console.error("Final login failed:", finalLoginResponse.data);
                         return "Final login failed. Please try again.";
@@ -154,14 +155,17 @@ class StateMachine {
         }
     }
 
-    async handleIntentAfterLogin(from, intent) {
+    async handleIntentAfterLogin(from) {
         console.log("entering handleIntentAfterLogin");
-        switch (intent) {
+
+        // Now we transition to the appropriate state based on the lastIntent
+        switch (this.lastIntent) {
             case 'BALANCE':
+                this.state = states.BALANCE; // Transition to BALANCE state
                 return await this.fetchBalance(from);
-            // Handle other intents (e.g., 'RECENT_TRANSACTIONS', 'BILL_PAYMENT', 'MONEY_TRANSFER') here
+            // Handle other intents here...
             default:
-                return "You are logged in. What would you like to do next?";
+                return "What would you like to do next?"; // Provide a prompt for further action
         }
     }
 
