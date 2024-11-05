@@ -6,28 +6,37 @@ const botRoutes = require("./routes/botRoutes");
 const config = require("./config/config");
 const errorHandler = require("./middlewares/errorHandler");
 
-const numCPUs = os.cpus().length; // Get the number of CPU cores
+const numCPUs = Math.min(os.cpus().length, 2); // Limit the number of workers to 2 (based on 512MB memory limit)
 
 if (cluster.isMaster) {
     console.log(`Master process is running. Spawning ${numCPUs} workers...`);
 
+    // Fork the worker processes
     for (let i = 0; i < numCPUs; i++) {
-        cluster.fork();
+        cluster.fork(); // Spawn a worker for each CPU core
     }
 
     cluster.on("exit", (worker, code, signal) => {
-        console.log(`Worker ${worker.process.pid} died`);
-        cluster.fork(); // Replace the worker
+        console.log(`Worker ${worker.process.pid} died, forking a new one...`);
+        cluster.fork(); // If a worker dies, fork a new one to maintain the number of workers
     });
 } else {
+    // Worker process will run the Express app
     const app = express();
 
-    app.use(bodyParser.json()); // Body parser middleware
-    app.use("/api", botRoutes); // Routes for your chatbot API
-    app.use(errorHandler); // Error handling middleware
+    // Middleware to parse incoming JSON data
+    app.use(bodyParser.json());
 
+    // API route for the chatbot
+    app.use("/api", botRoutes);
+
+    // Error handling middleware
+    app.use(errorHandler);
+
+    // Use the assigned PORT environment variable or default to 3000
     const PORT = process.env.PORT || 3000;
 
+    // Start the server
     app.listen(PORT, () => {
         console.log(`Worker ${process.pid} is listening on port ${PORT}`);
     });
