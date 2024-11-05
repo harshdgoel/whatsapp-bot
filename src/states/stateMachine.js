@@ -7,7 +7,6 @@ const states = {
     OTP_VERIFICATION: 'OTP_VERIFICATION',
     LOGGED_IN: 'LOGGED_IN',
     BALANCE: 'BALANCE',
-    // Other states...
 };
 
 class StateMachine {
@@ -15,18 +14,17 @@ class StateMachine {
         this.state = states.INITIAL;
         this.mobileNumber = '';
         this.interactionId = '';
-        this.registrationId = ''; // Store registrationId
-        this.auth = this.createAuthModule(); // Create an instance of the auth module
-        this.lastIntent = ''; // Store last intent
-        this.cookies = ''; // To store cookies
+        this.registrationId = ''; 
+        this.auth = this.createAuthModule();
+        this.lastIntent = ''; 
+        this.cookies = ''; 
     }
 
     // Auth module to manage token securely
  createAuthModule() {
     let anonymousToken = '';
     let sessionToken = '';
-    let cookies = ''; // Change this to a local variable
-
+    let cookies = ''; 
     return {
         setAnonymousToken: (value) => {
             anonymousToken = value;
@@ -35,7 +33,7 @@ class StateMachine {
             sessionToken = value;
         },
         setCookies: (value) => {
-            cookies = value; // Save cookies
+            cookies = value;
         },
         fetch: async (resource, options = {}) => {
             if (sessionToken) {
@@ -47,26 +45,25 @@ class StateMachine {
             if (cookies) {
                 options.headers = {
                     ...options.headers,
-                    'Cookie': cookies, // Add cookies to the request
+                    'Cookie': cookies,
                 };
             }
             return axios.post(resource, options.data, options);
         },
         getAnonymousToken: () => anonymousToken,
         getSessionToken: () => sessionToken,
-        getCookies: () => cookies, // Add this getter
+        getCookies: () => cookies,
     };
 }
 
 
     async handleMessage(from, messageBody, intent) {
-        // Store the last intent
         this.lastIntent = intent; 
 
         if (this.state === states.OTP_VERIFICATION) {
             const responseMessage = await this.verifyOTP(messageBody, from, intent);
             await this.sendResponse(from, responseMessage);
-            return; // Exit to avoid processing further
+            return;
         }
 
         if (this.state === states.LOGGED_IN) {
@@ -90,8 +87,8 @@ class StateMachine {
 
     async handleInitialState(intent, from) {
         if (['BALANCE', 'RECENT_TRANSACTIONS', 'BILL_PAYMENT', 'MONEY_TRANSFER'].includes(intent)) {
-            this.mobileNumber = '916378582419'; // Use the sender's number directly
-            this.state = states.OTP_VERIFICATION; // Transition to OTP verification state
+            this.mobileNumber = '916378582419'; // Use the sender's number directly to be changed
+            this.state = states.OTP_VERIFICATION;
             return "An OTP has been sent to your mobile number. Please enter the OTP to verify.";
         }
         return "I can help you with balance, transactions, bill payments, and money transfers. Please enter your request.";
