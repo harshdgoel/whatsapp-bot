@@ -6,7 +6,7 @@ const botRoutes = require("./routes/botRoutes");
 const config = require("./config/config");
 const errorHandler = require("./middlewares/errorHandler");
 
-const numCPUs = Math.min(os.cpus().length, 2); // Limit the number of workers to 2 (based on 512MB memory limit)
+const numCPUs = Math.min(os.cpus().length, 2);
 
 if (cluster.isMaster) {
     console.log(`Master process is running. Spawning ${numCPUs} workers...`);
