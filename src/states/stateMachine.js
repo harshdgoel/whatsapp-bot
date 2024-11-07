@@ -97,7 +97,7 @@ class StateMachine {
     async verifyOTP(otp, from, intent) {
         try {
             console.log("First API call to get an anonymous token");
-            const tokenResponse = await axios.post('https://rncne-148-87-23-5.a.free.pinggy.link/digx-infra/login/v1/anonymousToken', {}, {
+            const tokenResponse = await axios.post('https://rneha-148-87-23-5.a.free.pinggy.link/digx-infra/login/v1/anonymousToken', {}, {
                 headers: {
                     'Content-Type': 'application/json',
                     'x-authentication-type': 'JWT'
@@ -109,7 +109,7 @@ class StateMachine {
                 this.interactionId = tokenResponse.data.interactionId;
                 this.auth.setAnonymousToken(tokenResponse.data.token); // Set the anonymous token
 
-                const otpResponse = await axios.post('https://rncne-148-87-23-5.a.free.pinggy.link/digx-infra/login/v1/login?locale=en', {
+                const otpResponse = await axios.post('https://rneha-148-87-23-5.a.free.pinggy.link/digx-infra/login/v1/login?locale=en', {
                     mobileNumber: this.mobileNumber
                 }, {
                     headers: {
@@ -125,7 +125,7 @@ class StateMachine {
                 if (otpResponse.data.status.result === "SUCCESSFUL") {
                     console.log('FINAL LOGIN SUCS');
                     this.registrationId = otpResponse.data.registrationId; // Store registrationId
-                    const finalLoginResponse = await axios.post('https://rncne-148-87-23-5.a.free.pinggy.link/digx-infra/login/v1/login?locale=en', {
+                    const finalLoginResponse = await axios.post('https://rneha-148-87-23-5.a.free.pinggy.link/digx-infra/login/v1/login?locale=en', {
                         mobileNumber: this.mobileNumber,
                         registrationId: this.registrationId // Use the registrationId here
                     }, {
@@ -192,7 +192,7 @@ class StateMachine {
     console.log("Entering fetchBalance");
     console.log("cookie:", this.auth.getCookies());
     try {
-        const response = await axios.get('https://rncne-148-87-23-5.a.free.pinggy.link/digx-common/dda/v1/demandDeposit?accountType=CURRENT%2CSAVING&status=ACTIVE&status=DORMANT&status=CLOSED&expand=DEBITCARDS&locale=en', {
+        const response = await axios.get('https://rneha-148-87-23-5.a.free.pinggy.link/digx-common/dda/v1/demandDeposit?accountType=CURRENT%2CSAVING&status=ACTIVE&status=DORMANT&status=CLOSED&expand=DEBITCARDS&locale=en', {
             headers: {
                 'Authorization': `Bearer ${this.auth.getSessionToken()}`,
                 'X-Token-Type': 'JWT',
